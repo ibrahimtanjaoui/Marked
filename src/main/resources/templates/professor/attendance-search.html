@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Attendance Search | Marked</title>
+        <link rel="icon" type="image/svg+xml" th:href="@{/img/favicon.svg}" />
+        <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}" />
+        <link rel="stylesheet" th:href="@{/css/style.css}" />
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"
+        />
+    </head>
+    <body class="page-wrapper">
+        <!-- Navbar -->
+        <nav class="navbar-area sticky">
+            <div class="container">
+                <div class="navbar">
+                    <a th:href="@{/}" class="navbar-brand">
+                        <span class="brand-icon">M</span>
+                        Marked
+                    </a>
+
+                    <button
+                        class="navbar-toggler"
+                        type="button"
+                        onclick="toggleMenu()"
+                    >
+                        <span class="toggler-icon"></span>
+                        <span class="toggler-icon"></span>
+                        <span class="toggler-icon"></span>
+                    </button>
+
+                    <div class="navbar-collapse" id="navbarCollapse">
+                        <ul class="navbar-nav">
+                            <li class="nav-item">
+                                <a
+                                    th:href="@{/professors/{id}(id=${professor.id})}"
+                                    >Dashboard</a
+                                >
+                            </li>
+                            <li class="nav-item">
+                                <a
+                                    th:href="@{/professors/{id}/sessions(id=${professor.id})}"
+                                    >Sessions</a
+                                >
+                            </li>
+                            <li class="nav-item">
+                                <a
+                                    th:href="@{/professors/{id}/attendance/search(id=${professor.id})}"
+                                    class="active"
+                                    >Search Attendance</a
+                                >
+                            </li>
+                            <li class="nav-item">
+                                <a
+                                    th:href="@{/professors/{id}/justifications(id=${professor.id})}"
+                                    >Justifications</a
+                                >
+                            </li>
+                            <li class="nav-item">
+                                <form
+                                    th:action="@{/auth/logout}"
+                                    method="post"
+                                    style="display: inline"
+                                >
+                                    <button type="submit" class="btn-logout">
+                                        <i class="bi bi-box-arrow-right"></i>
+                                        Logout
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Dashboard Header -->
+        <header class="dashboard-header">
+            <div class="container">
+                <h1>Search Attendance Records</h1>
+                <p>
+                    Search and filter attendance by student, course, or date
+                    range
+                </p>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="dashboard-content">
+            <div class="container">
+                <!-- Alerts -->
+                <div
+                    th:if="${error}"
+                    class="alert alert-danger"
+                    style="margin-bottom: 1.5rem"
+                >
+                    <span th:text="${error}"></span>
+                </div>
+
+                <!-- Search Form -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="bi bi-search me-2"></i>
+                            Search Filters
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <form
+                            th:action="@{/professors/{id}/attendance/search(id=${professor.id})}"
+                            method="get"
+                        >
+                            <div class="row g-3">
+                                <!-- Student Search -->
+                                <div class="col-md-6">
+                                    <label class="form-label" for="studentSearch">
+                                        <i class="bi bi-person"></i>
+                                        Student Name or ID
+                                    </label>
+                                    <input
+                                        type="text"
+                                        class="form-control"
+                                        id="studentSearch"
+                                        name="studentSearch"
+                                        placeholder="Enter student name or ID..."
+                                        th:value="${studentSearch}"
+                                    />
+                                </div>
+
+                                <!-- Course Search -->
+                                <div class="col-md-6">
+                                    <label class="form-label" for="courseSearch">
+                                        <i class="bi bi-book"></i>
+                                        Course Name
+                                    </label>
+                                    <input
+                                        type="text"
+                                        class="form-control"
+                                        id="courseSearch"
+                                        name="courseSearch"
+                                        placeholder="Enter course name..."
+                                        th:value="${courseSearch}"
+                                    />
+                                </div>
+
+                                <!-- Start Date -->
+                                <div class="col-md-6">
+                                    <label class="form-label" for="startDate">
+                                        <i class="bi bi-calendar"></i>
+                                        Start Date
+                                    </label>
+                                    <input
+                                        type="date"
+                                        class="form-control"
+                                        id="startDate"
+                                        name="startDate"
+                                        th:value="${startDate}"
+                                    />
+                                </div>
+
+                                <!-- End Date -->
+                                <div class="col-md-6">
+                                    <label class="form-label" for="endDate">
+                                        <i class="bi bi-calendar"></i>
+                                        End Date
+                                    </label>
+                                    <input
+                                        type="date"
+                                        class="form-control"
+                                        id="endDate"
+                                        name="endDate"
+                                        th:value="${endDate}"
+                                    />
+                                </div>
+                            </div>
+
+                            <div class="mt-4">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-search"></i>
+                                    Search Attendance
+                                </button>
+                                <a
+                                    th:href="@{/professors/{id}/attendance/search(id=${professor.id})}"
+                                    class="btn btn-outline-secondary ms-2"
+                                >
+                                    <i class="bi bi-x-circle"></i>
+                                    Clear Filters
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Results -->
+                <div
+                    th:if="${attendances != null}"
+                    class="card mt-4"
+                >
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            Search Results
+                            <span
+                                class="badge bg-primary ms-2"
+                                th:text="${totalResults}"
+                                >0</span
+                            >
+                        </h3>
+                    </div>
+                    <div class="card-body p-0">
+                        <!-- Empty State -->
+                        <div
+                            th:if="${#lists.isEmpty(attendances)}"
+                            class="empty-state"
+                        >
+                            <div class="empty-state-title">
+                                No attendance records found
+                            </div>
+                            <p class="empty-state-description">
+                                Try adjusting your search filters to find what
+                                you're looking for.
+                            </p>
+                        </div>
+
+                        <!-- Results Table -->
+                        <div
+                            th:unless="${#lists.isEmpty(attendances)}"
+                            class="table-responsive"
+                        >
+                            <table class="table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Student</th>
+                                        <th>Student ID</th>
+                                        <th>Course</th>
+                                        <th>Session Date</th>
+                                        <th>Status</th>
+                                        <th>Marked At</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="attendance : ${attendances}">
+                                        <td>
+                                            <strong
+                                                th:text="${attendance.student.fullName}"
+                                                >John Doe</strong
+                                            >
+                                        </td>
+                                        <td
+                                            th:text="${attendance.student.studentId}"
+                                        >
+                                            S001
+                                        </td>
+                                        <td
+                                            th:text="${attendance.session.timeTable.courseAssignment.course.name}"
+                                        >
+                                            Course Name
+                                        </td>
+                                        <td>
+                                            <span
+                                                th:text="${#temporals.format(attendance.session.calendar.date, 'EEE, MMM d')}"
+                                                >Mon, Jan 5</span
+                                            >
+                                            <br />
+                                            <small
+                                                class="text-muted"
+                                                th:text="${attendance.session.startTime + ' - ' + attendance.session.endTime}"
+                                                >08:30 - 10:30</small
+                                            >
+                                        </td>
+                                        <td>
+                                            <span
+                                                class="badge"
+                                                th:classappend="${attendance.status.name() == 'PRESENT'} ? 'bg-success' : (${attendance.status.name() == 'ABSENT'} ? 'bg-danger' : (${attendance.status.name() == 'EXCUSED'} ? 'bg-info' : 'bg-secondary'))"
+                                                th:text="${attendance.status}"
+                                                >PRESENT</span
+                                            >
+                                        </td>
+                                        <td>
+                                            <span
+                                                th:if="${attendance.createdOn != null}"
+                                                th:text="${#temporals.format(attendance.createdOn, 'MMM d, HH:mm')}"
+                                                >Jan 5, 08:45</span
+                                            >
+                                            <span
+                                                th:unless="${attendance.createdOn != null}"
+                                                class="text-muted"
+                                                >-</span
+                                            >
+                                        </td>
+                                        <td>
+                                            <a
+                                                th:href="@{/professors/{profId}/sessions/{sessId}(profId=${professor.id}, sessId=${attendance.session.id})}"
+                                                class="btn btn-sm btn-outline-primary"
+                                            >
+                                                <i class="bi bi-eye"></i>
+                                                View Session
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Export Button -->
+                    <div
+                        th:unless="${#lists.isEmpty(attendances)}"
+                        class="card-footer text-end"
+                    >
+                        <p class="text-muted mb-2" style="font-size: 0.875rem">
+                            <i class="bi bi-info-circle"></i>
+                            For full course exports, use the export button on
+                            individual session pages
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <div
+                    th:if="${attendances != null and !#lists.isEmpty(attendances)}"
+                    class="row g-3 mt-4"
+                >
+                    <div class="col-md-3">
+                        <div class="card text-center" style="padding: 1.25rem">
+                            <div
+                                style="
+                                    font-size: 2rem;
+                                    font-weight: 700;
+                                    color: var(--success);
+                                "
+                                th:text="${#lists.size(attendances.?[status.name() == 'PRESENT'])}"
+                            >
+                                0
+                            </div>
+                            <div
+                                style="
+                                    font-size: 0.875rem;
+                                    color: var(--gray-500);
+                                "
+                            >
+                                Present
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center" style="padding: 1.25rem">
+                            <div
+                                style="
+                                    font-size: 2rem;
+                                    font-weight: 700;
+                                    color: var(--danger);
+                                "
+                                th:text="${#lists.size(attendances.?[status.name() == 'ABSENT'])}"
+                            >
+                                0
+                            </div>
+                            <div
+                                style="
+                                    font-size: 0.875rem;
+                                    color: var(--gray-500);
+                                "
+                            >
+                                Absent
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center" style="padding: 1.25rem">
+                            <div
+                                style="
+                                    font-size: 2rem;
+                                    font-weight: 700;
+                                    color: var(--info);
+                                "
+                                th:text="${#lists.size(attendances.?[status.name() == 'EXCUSED'])}"
+                            >
+                                0
+                            </div>
+                            <div
+                                style="
+                                    font-size: 0.875rem;
+                                    color: var(--gray-500);
+                                "
+                            >
+                                Excused
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center" style="padding: 1.25rem">
+                            <div
+                                style="
+                                    font-size: 2rem;
+                                    font-weight: 700;
+                                    color: var(--primary);
+                                "
+                                th:text="${totalResults}"
+                            >
+                                0
+                            </div>
+                            <div
+                                style="
+                                    font-size: 0.875rem;
+                                    color: var(--gray-500);
+                                "
+                            >
+                                Total Records
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <script th:src="@{/js/bootstrap.bundle.min.js}"></script>
+        <script>
+            function toggleMenu() {
+                document
+                    .getElementById('navbarCollapse')
+                    .classList.toggle('show');
+            }
+        </script>
+    </body>
+</html>

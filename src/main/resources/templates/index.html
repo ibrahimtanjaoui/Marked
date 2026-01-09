@@ -1,0 +1,894 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta
+            name="description"
+            content="Marked - Modern university attendance tracking system"
+        />
+        <title>Marked - University Attendance System</title>
+        <link rel="icon" type="image/svg+xml" th:href="@{/img/favicon.svg}" />
+        <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}" />
+        <link rel="stylesheet" th:href="@{/css/style.css}" />
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"
+        />
+    </head>
+    <body>
+        <!-- Navbar -->
+        <header class="header">
+            <div class="navbar-area" id="navbar">
+                <div class="container">
+                    <nav class="navbar">
+                        <a th:href="@{/}" class="navbar-brand">
+                            <span class="brand-icon">M</span>
+                            Marked
+                        </a>
+
+                        <button
+                            class="navbar-toggler"
+                            type="button"
+                            onclick="toggleMenu()"
+                            aria-label="Toggle navigation"
+                            aria-expanded="false"
+                        >
+                            <span class="toggler-icon"></span>
+                            <span class="toggler-icon"></span>
+                            <span class="toggler-icon"></span>
+                        </button>
+
+                        <div class="navbar-collapse" id="navbarCollapse">
+                            <ul class="navbar-nav">
+                                <li class="nav-item">
+                                    <a class="active" href="#home">Home</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="#features">Features</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="#how-it-works">How It Works</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="#stats">Stats</a>
+                                </li>
+                                <li class="nav-item nav-cta">
+                                    <a href="#portals">Get Started</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </header>
+
+        <!-- Hero Section -->
+        <section id="home" class="hero-section">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-lg-6">
+                        <div class="hero-content">
+                            <span class="tagline"
+                                >University Attendance System</span
+                            >
+                            <h1>
+                                Track Attendance with
+                                <span class="text-accent">Confidence</span>
+                            </h1>
+                            <p>
+                                A modern, secure, and efficient way to manage
+                                class attendance. Generate unique codes, prevent
+                                proxy attendance, and keep accurate records.
+                            </p>
+                            <div class="hero-buttons">
+                                <a
+                                    href="#portals"
+                                    class="btn btn-accent btn-lg"
+                                >
+                                    <i
+                                        class="bi bi-arrow-right-circle me-2"
+                                    ></i>
+                                    Get Started
+                                </a>
+                                <a
+                                    href="#how-it-works"
+                                    class="btn btn-outline btn-lg"
+                                >
+                                    Learn More
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="hero-img text-center">
+                            <svg
+                                viewBox="0 0 500 400"
+                                style="max-width: 100%; height: auto"
+                            >
+                                <!-- Background shapes -->
+                                <defs>
+                                    <linearGradient
+                                        id="grad1"
+                                        x1="0%"
+                                        y1="0%"
+                                        x2="100%"
+                                        y2="100%"
+                                    >
+                                        <stop
+                                            offset="0%"
+                                            style="
+                                                stop-color: #1e3a5f;
+                                                stop-opacity: 0.1;
+                                            "
+                                        />
+                                        <stop
+                                            offset="100%"
+                                            style="
+                                                stop-color: #0d9488;
+                                                stop-opacity: 0.1;
+                                            "
+                                        />
+                                    </linearGradient>
+                                    <linearGradient
+                                        id="grad2"
+                                        x1="0%"
+                                        y1="0%"
+                                        x2="100%"
+                                        y2="100%"
+                                    >
+                                        <stop
+                                            offset="0%"
+                                            style="
+                                                stop-color: #1e3a5f;
+                                                stop-opacity: 1;
+                                            "
+                                        />
+                                        <stop
+                                            offset="100%"
+                                            style="
+                                                stop-color: #0d9488;
+                                                stop-opacity: 1;
+                                            "
+                                        />
+                                    </linearGradient>
+                                </defs>
+
+                                <!-- Large background circle -->
+                                <circle
+                                    cx="280"
+                                    cy="200"
+                                    r="150"
+                                    fill="url(#grad1)"
+                                />
+
+                                <!-- Clipboard/checklist representation -->
+                                <rect
+                                    x="180"
+                                    y="80"
+                                    width="180"
+                                    height="240"
+                                    rx="12"
+                                    fill="#ffffff"
+                                    stroke="#e5e7eb"
+                                    stroke-width="2"
+                                />
+                                <rect
+                                    x="220"
+                                    y="60"
+                                    width="100"
+                                    height="40"
+                                    rx="6"
+                                    fill="url(#grad2)"
+                                />
+
+                                <!-- Checklist items -->
+                                <rect
+                                    x="205"
+                                    y="130"
+                                    width="20"
+                                    height="20"
+                                    rx="4"
+                                    fill="#0d9488"
+                                />
+                                <path
+                                    d="M210 140 L215 145 L222 135"
+                                    stroke="#ffffff"
+                                    stroke-width="2.5"
+                                    fill="none"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                />
+                                <rect
+                                    x="240"
+                                    y="132"
+                                    width="100"
+                                    height="8"
+                                    rx="4"
+                                    fill="#e5e7eb"
+                                />
+                                <rect
+                                    x="240"
+                                    y="144"
+                                    width="60"
+                                    height="6"
+                                    rx="3"
+                                    fill="#f3f4f6"
+                                />
+
+                                <rect
+                                    x="205"
+                                    y="170"
+                                    width="20"
+                                    height="20"
+                                    rx="4"
+                                    fill="#0d9488"
+                                />
+                                <path
+                                    d="M210 180 L215 185 L222 175"
+                                    stroke="#ffffff"
+                                    stroke-width="2.5"
+                                    fill="none"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                />
+                                <rect
+                                    x="240"
+                                    y="172"
+                                    width="100"
+                                    height="8"
+                                    rx="4"
+                                    fill="#e5e7eb"
+                                />
+                                <rect
+                                    x="240"
+                                    y="184"
+                                    width="80"
+                                    height="6"
+                                    rx="3"
+                                    fill="#f3f4f6"
+                                />
+
+                                <rect
+                                    x="205"
+                                    y="210"
+                                    width="20"
+                                    height="20"
+                                    rx="4"
+                                    fill="#0d9488"
+                                />
+                                <path
+                                    d="M210 220 L215 225 L222 215"
+                                    stroke="#ffffff"
+                                    stroke-width="2.5"
+                                    fill="none"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                />
+                                <rect
+                                    x="240"
+                                    y="212"
+                                    width="100"
+                                    height="8"
+                                    rx="4"
+                                    fill="#e5e7eb"
+                                />
+                                <rect
+                                    x="240"
+                                    y="224"
+                                    width="70"
+                                    height="6"
+                                    rx="3"
+                                    fill="#f3f4f6"
+                                />
+
+                                <rect
+                                    x="205"
+                                    y="250"
+                                    width="20"
+                                    height="20"
+                                    rx="4"
+                                    stroke="#d1d5db"
+                                    stroke-width="2"
+                                    fill="#ffffff"
+                                />
+                                <rect
+                                    x="240"
+                                    y="252"
+                                    width="100"
+                                    height="8"
+                                    rx="4"
+                                    fill="#e5e7eb"
+                                />
+                                <rect
+                                    x="240"
+                                    y="264"
+                                    width="50"
+                                    height="6"
+                                    rx="3"
+                                    fill="#f3f4f6"
+                                />
+
+                                <!-- Floating elements -->
+                                <circle
+                                    cx="130"
+                                    cy="150"
+                                    r="8"
+                                    fill="#0d9488"
+                                    opacity="0.6"
+                                />
+                                <circle
+                                    cx="410"
+                                    cy="280"
+                                    r="10"
+                                    fill="#1e3a5f"
+                                    opacity="0.4"
+                                />
+                                <circle
+                                    cx="380"
+                                    cy="120"
+                                    r="6"
+                                    fill="#0d9488"
+                                    opacity="0.5"
+                                />
+
+                                <!-- Code badge -->
+                                <g transform="translate(360, 180)">
+                                    <rect
+                                        x="0"
+                                        y="0"
+                                        width="80"
+                                        height="40"
+                                        rx="8"
+                                        fill="#1e3a5f"
+                                    />
+                                    <text
+                                        x="40"
+                                        y="26"
+                                        text-anchor="middle"
+                                        fill="#ffffff"
+                                        font-family="monospace"
+                                        font-size="14"
+                                        font-weight="bold"
+                                    >
+                                        A7B3K9
+                                    </text>
+                                </g>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Image + Text Section 1 -->
+        <section class="section bg-white">
+            <div class="container">
+                <div class="row align-items-center g-5">
+                    <div class="col-lg-6">
+                        <h2
+                            style="
+                                font-size: 2.5rem;
+                                font-weight: 700;
+                                margin-bottom: 1.5rem;
+                            "
+                        >
+                            Modern Attendance Tracking
+                        </h2>
+                        <p
+                            style="
+                                font-size: 1.125rem;
+                                color: var(--text-muted);
+                                line-height: 1.8;
+                                margin-bottom: 1.5rem;
+                            "
+                        >
+                            Marked revolutionizes how universities handle
+                            attendance. Our platform combines security with
+                            simplicity, giving professors and students the tools
+                            they need for seamless attendance management.
+                        </p>
+                        <a
+                            href="#features"
+                            class="btn btn-outline"
+                            style="border-radius: 50px; padding: 0.75rem 2rem"
+                        >
+                            Learn more <i class="bi bi-arrow-right ms-2"></i>
+                        </a>
+                    </div>
+                    <div class="col-lg-6">
+                        <img
+                            th:src="@{/img/4.png}"
+                            alt="University campus"
+                            style="
+                                width: 100%;
+                                border-radius: 16px;
+                                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+                            "
+                        />
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Image + Text Section 2 (Reversed) -->
+        <section class="section">
+            <div class="container">
+                <div class="row align-items-center g-5">
+                    <div class="col-lg-6 order-lg-2">
+                        <h2
+                            style="
+                                font-size: 2.5rem;
+                                font-weight: 700;
+                                margin-bottom: 1.5rem;
+                            "
+                        >
+                            Empowering Educators
+                        </h2>
+                        <p
+                            style="
+                                font-size: 1.125rem;
+                                color: var(--text-muted);
+                                line-height: 1.8;
+                                margin-bottom: 1.5rem;
+                            "
+                        >
+                            We believe in making education more efficient. With
+                            real-time tracking, instant code generation, and
+                            comprehensive analytics, professors can focus on
+                            what matters most — teaching.
+                        </p>
+                        <a
+                            href="#how-it-works"
+                            class="btn btn-outline"
+                            style="border-radius: 50px; padding: 0.75rem 2rem"
+                        >
+                            See how we do it
+                            <i class="bi bi-arrow-right ms-2"></i>
+                        </a>
+                    </div>
+                    <div class="col-lg-6 order-lg-1">
+                        <img
+                            th:src="@{/img/8.png}"
+                            alt="Professor teaching"
+                            style="
+                                width: 100%;
+                                border-radius: 16px;
+                                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+                            "
+                        />
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features" class="section bg-white">
+            <div class="container">
+                <div class="section-header text-center">
+                    <h2>Why Choose Marked?</h2>
+                    <p>
+                        Built for modern universities with security and
+                        simplicity in mind. Our platform streamlines attendance
+                        management for the digital age.
+                    </p>
+                </div>
+
+                <div class="row g-4 g-lg-5">
+                    <div class="col-md-6 col-lg-3">
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="bi bi-shield-lock"></i>
+                            </div>
+                            <h4>Secure Codes</h4>
+                            <p>
+                                Time-limited, unique codes prevent proxy
+                                attendance and ensure accurate records.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="bi bi-lightning-charge"></i>
+                            </div>
+                            <h4>Real-Time Tracking</h4>
+                            <p>
+                                Instant attendance updates with live dashboards
+                                for professors and students.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="bi bi-file-earmark-check"></i>
+                            </div>
+                            <h4>Easy Justifications</h4>
+                            <p>
+                                Students can submit absence justifications that
+                                professors can review and approve.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="bi bi-graph-up-arrow"></i>
+                            </div>
+                            <h4>Smart Analytics</h4>
+                            <p>
+                                Comprehensive attendance reports and statistics
+                                for informed decision-making.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- How It Works Section -->
+        <section id="how-it-works" class="section">
+            <div class="container">
+                <div class="section-header text-center">
+                    <h2>How It Works</h2>
+                    <p>
+                        Simple, efficient attendance tracking in three easy
+                        steps. No complicated setup, no learning curve.
+                    </p>
+                </div>
+
+                <div class="row g-4 g-lg-5">
+                    <div class="col-md-4">
+                        <div class="step-card">
+                            <div class="step-number">
+                                <i class="bi bi-1-circle-fill"></i>
+                            </div>
+                            <h4>Professor Generates Code</h4>
+                            <p>
+                                At the start of class, the professor generates a
+                                unique, time-limited attendance code with one
+                                click.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="step-card">
+                            <div class="step-number">
+                                <i class="bi bi-2-circle-fill"></i>
+                            </div>
+                            <h4>Students Enter Code</h4>
+                            <p>
+                                Students enter the code on their devices to mark
+                                their attendance before it expires.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="step-card">
+                            <div class="step-number">
+                                <i class="bi bi-3-circle-fill"></i>
+                            </div>
+                            <h4>Records Updated</h4>
+                            <p>
+                                Attendance is automatically recorded and
+                                available for review in real-time dashboards.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats Section -->
+        <section id="stats" class="section">
+            <div class="container">
+                <div class="row g-4 g-lg-5 text-center">
+                    <div class="col-6 col-md-3">
+                        <div class="stat-item">
+                            <div class="stat-number">99%</div>
+                            <div class="stat-label">Accuracy Rate</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="stat-item">
+                            <div class="stat-number">&lt;5s</div>
+                            <div class="stat-label">Check-in Time</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="stat-item">
+                            <div class="stat-number">100%</div>
+                            <div class="stat-label">Paperless</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="stat-item">
+                            <div class="stat-number">24/7</div>
+                            <div class="stat-label">Available</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Visual Banner Section -->
+        <section class="section bg-white">
+            <div class="container">
+                <div class="row align-items-center g-5">
+                    <div class="col-lg-6">
+                        <img
+                            th:src="@{/img/5.png}"
+                            alt="Students collaborating"
+                            style="
+                                width: 100%;
+                                border-radius: 16px;
+                                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+                            "
+                        />
+                    </div>
+                    <div class="col-lg-6">
+                        <h2
+                            style="
+                                font-size: 2.5rem;
+                                font-weight: 700;
+                                margin-bottom: 1.5rem;
+                            "
+                        >
+                            Built for Students & Professors
+                        </h2>
+                        <p
+                            style="
+                                font-size: 1.125rem;
+                                color: var(--text-muted);
+                                line-height: 1.8;
+                                margin-bottom: 1.5rem;
+                            "
+                        >
+                            Whether you're a student tracking your attendance or
+                            a professor managing multiple classes, Marked
+                            provides the tools you need. Simple, intuitive, and
+                            designed with education in mind.
+                        </p>
+                        <div class="d-flex gap-3 flex-wrap">
+                            <div class="d-flex align-items-center gap-2">
+                                <i
+                                    class="bi bi-check-circle-fill text-success"
+                                ></i>
+                                <span>Easy to use</span>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <i
+                                    class="bi bi-check-circle-fill text-success"
+                                ></i>
+                                <span>Secure & private</span>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <i
+                                    class="bi bi-check-circle-fill text-success"
+                                ></i>
+                                <span>Real-time updates</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Portals Section -->
+        <section id="portals" class="section">
+            <div class="container">
+                <div class="section-header text-center">
+                    <h2>Get Started</h2>
+                    <p>
+                        Choose your portal to access the attendance system. Log
+                        in to access your dashboard.
+                    </p>
+                </div>
+
+                <div class="row g-4 g-lg-5 justify-content-center">
+                    <div class="col-md-6 col-lg-5">
+                        <div class="portal-card portal-student">
+                            <img
+                                th:src="@{/img/6.png}"
+                                alt="Student illustration"
+                                style="
+                                    width: 120px;
+                                    height: 120px;
+                                    object-fit: cover;
+                                    border-radius: 50%;
+                                    margin-bottom: 1rem;
+                                    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+                                "
+                            />
+                            <h3>Student Portal</h3>
+                            <p>
+                                Access your attendance records, mark your
+                                presence in class, and submit justifications for
+                                absences.
+                            </p>
+                            <a
+                                th:href="@{/login}"
+                                class="btn btn-accent btn-lg w-100"
+                            >
+                                Login
+                                <i class="bi bi-arrow-right ms-2"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-lg-5">
+                        <div class="portal-card portal-professor">
+                            <img
+                                th:src="@{/img/9.png}"
+                                alt="Professor illustration"
+                                style="
+                                    width: 120px;
+                                    height: 120px;
+                                    object-fit: cover;
+                                    border-radius: 50%;
+                                    margin-bottom: 1rem;
+                                    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+                                "
+                            />
+                            <h3>Professor Portal</h3>
+                            <p>
+                                Manage your sessions, generate attendance codes,
+                                view student attendance, and review
+                                justifications.
+                            </p>
+                            <a
+                                th:href="@{/login}"
+                                class="btn btn-primary btn-lg w-100"
+                            >
+                                Login
+                                <i class="bi bi-arrow-right ms-2"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="container">
+                <div class="row g-4">
+                    <div class="col-lg-4">
+                        <div class="navbar-brand mb-3">
+                            <span class="brand-icon">M</span>
+                            Marked
+                        </div>
+                        <p class="text-muted">
+                            A modern, secure, and efficient attendance tracking
+                            system designed for universities and educational
+                            institutions.
+                        </p>
+                    </div>
+                    <div class="col-6 col-lg-2">
+                        <h5>Quick Links</h5>
+                        <ul class="footer-links">
+                            <li><a href="#home">Home</a></li>
+                            <li><a href="#features">Features</a></li>
+                            <li><a href="#how-it-works">How It Works</a></li>
+                            <li><a href="#portals">Get Started</a></li>
+                        </ul>
+                    </div>
+                    <div class="col-6 col-lg-2">
+                        <h5>Portals</h5>
+                        <ul class="footer-links">
+                            <li><a href="#portals">Student Portal</a></li>
+                            <li><a href="#portals">Professor Portal</a></li>
+                            <li><a href="#portals">Admin Portal</a></li>
+                        </ul>
+                    </div>
+                    <div class="col-lg-4">
+                        <h5>Contact</h5>
+                        <ul class="footer-links">
+                            <li>
+                                <i class="bi bi-envelope me-2"></i>
+                                support@marked.edu
+                            </li>
+                            <li>
+                                <i class="bi bi-geo-alt me-2"></i> University
+                                Campus
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="footer-bottom">
+                    <p class="mb-0">&copy; 2025 Marked. All rights reserved.</p>
+                </div>
+            </div>
+        </footer>
+
+        <!-- Scroll to Top Button -->
+        <a href="#" class="scroll-top" id="scrollTop">
+            <i class="bi bi-arrow-up"></i>
+        </a>
+
+        <!-- Scripts -->
+        <script th:src="@{/js/bootstrap.bundle.min.js}"></script>
+        <script>
+            // Mobile Menu Toggle
+            function toggleMenu() {
+                const navbar = document.getElementById("navbarCollapse");
+                const toggler = document.querySelector(".navbar-toggler");
+                const isExpanded = navbar.classList.toggle("show");
+                toggler.setAttribute("aria-expanded", isExpanded);
+            }
+
+            // Close menu when clicking outside
+            document.addEventListener("click", function (e) {
+                const navbar = document.getElementById("navbarCollapse");
+                const toggler = document.querySelector(".navbar-toggler");
+                if (
+                    navbar.classList.contains("show") &&
+                    !navbar.contains(e.target) &&
+                    !toggler.contains(e.target)
+                ) {
+                    navbar.classList.remove("show");
+                    toggler.setAttribute("aria-expanded", "false");
+                }
+            });
+
+            // Sticky Navbar
+            const navbarArea = document.getElementById("navbar");
+            const scrollTopBtn = document.getElementById("scrollTop");
+
+            window.addEventListener("scroll", function () {
+                if (window.scrollY > 50) {
+                    navbarArea.classList.add("sticky");
+                    scrollTopBtn.classList.add("show");
+                } else {
+                    navbarArea.classList.remove("sticky");
+                    scrollTopBtn.classList.remove("show");
+                }
+            });
+
+            // Smooth Scroll for anchor links
+            document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+                anchor.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(
+                        this.getAttribute("href"),
+                    );
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: "smooth",
+                            block: "start",
+                        });
+                        // Close mobile menu if open
+                        const navbar =
+                            document.getElementById("navbarCollapse");
+                        const toggler =
+                            document.querySelector(".navbar-toggler");
+                        navbar.classList.remove("show");
+                        toggler.setAttribute("aria-expanded", "false");
+                    }
+                });
+            });
+
+            // Active nav link highlighting on scroll
+            const sections = document.querySelectorAll("section[id]");
+            const navLinks = document.querySelectorAll(".navbar-nav a");
+
+            window.addEventListener("scroll", () => {
+                let current = "";
+                sections.forEach((section) => {
+                    const sectionTop = section.offsetTop - 100;
+                    if (window.scrollY >= sectionTop) {
+                        current = section.getAttribute("id");
+                    }
+                });
+
+                navLinks.forEach((link) => {
+                    link.classList.remove("active");
+                    if (link.getAttribute("href") === "#" + current) {
+                        link.classList.add("active");
+                    }
+                });
+            });
+        </script>
+    </body>
+</html>

@@ -1,0 +1,1388 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title th:text="${professor.firstName} + ' | Marked'">
+            Dashboard | Marked
+        </title>
+        <link rel="icon" type="image/svg+xml" th:href="@{/img/favicon.svg}" />
+        <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}" />
+        <link rel="stylesheet" th:href="@{/css/style.css}" />
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"
+        />
+        <style>
+            .equal-height-row {
+                display: flex;
+                flex-wrap: wrap;
+            }
+            .equal-height-row > [class*="col-"] {
+                display: flex;
+                flex-direction: column;
+            }
+            .equal-height-row .card {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+            }
+            .equal-height-row .card-body {
+                flex: 1;
+                overflow: auto;
+            }
+            /* Time-based Timetable Grid */
+            .timetable-container {
+                border: 1px solid var(--gray-200);
+                border-radius: 0.5rem;
+                overflow: hidden;
+            }
+            .timetable-grid {
+                display: grid;
+                /* Time column + 6 days (Sun-Sat, no Friday) */
+                grid-template-columns: 80px repeat(6, 1fr);
+                gap: 0;
+            }
+            .timetable-header {
+                background: var(--gray-100);
+                padding: 0.75rem 0.5rem;
+                text-align: center;
+                font-weight: 600;
+                font-size: 0.75rem;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                color: var(--gray-600);
+                border-bottom: 1px solid var(--gray-200);
+                border-right: 1px solid var(--gray-200);
+            }
+            .timetable-header:last-child {
+                border-right: none;
+            }
+            .timetable-header.today {
+                background: var(--gray-700);
+                color: white;
+            }
+            .timetable-time {
+                background: var(--gray-50);
+                padding: 0.5rem;
+                text-align: center;
+                font-size: 0.7rem;
+                font-weight: 500;
+                color: var(--gray-600);
+                border-right: 1px solid var(--gray-200);
+                border-bottom: 1px solid var(--gray-200);
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                min-height: 70px;
+            }
+            .timetable-time-start {
+                font-weight: 600;
+                color: var(--gray-700);
+            }
+            .timetable-time-end {
+                font-size: 0.65rem;
+                color: var(--gray-400);
+            }
+            .timetable-cell {
+                min-height: 70px;
+                padding: 0.25rem;
+                border-right: 1px solid var(--gray-200);
+                border-bottom: 1px solid var(--gray-200);
+                background: white;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .timetable-cell:nth-child(7n) {
+                border-right: none;
+            }
+            .timetable-entry {
+                background: var(--primary);
+                color: white;
+                padding: 0.5rem;
+                border-radius: 0.375rem;
+                font-size: 0.75rem;
+                width: 100%;
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+            .timetable-entry-course {
+                font-weight: 600;
+                font-size: 0.8rem;
+                margin-bottom: 0.125rem;
+            }
+            .timetable-entry-type {
+                font-size: 0.65rem;
+                opacity: 0.85;
+            }
+            @media (max-width: 992px) {
+                .timetable-grid {
+                    grid-template-columns: 60px repeat(6, 1fr);
+                }
+                .timetable-entry-course {
+                    font-size: 0.7rem;
+                }
+                .timetable-entry-type {
+                    display: none;
+                }
+            }
+            @media (max-width: 768px) {
+                .timetable-grid {
+                    grid-template-columns: 50px repeat(6, 1fr);
+                }
+                .timetable-header {
+                    font-size: 0.6rem;
+                    padding: 0.5rem 0.25rem;
+                }
+                .timetable-time {
+                    font-size: 0.6rem;
+                    padding: 0.25rem;
+                }
+                .timetable-entry-course {
+                    font-size: 0.6rem;
+                }
+            }
+        </style>
+    </head>
+    <body class="page-wrapper">
+        <!-- Navbar -->
+        <nav class="navbar-area sticky">
+            <div class="container">
+                <div class="navbar">
+                    <a th:href="@{/}" class="navbar-brand">
+                        <span class="brand-icon">M</span>
+                        Marked
+                    </a>
+
+                    <button
+                        class="navbar-toggler"
+                        type="button"
+                        onclick="toggleMenu()"
+                    >
+                        <span class="toggler-icon"></span>
+                        <span class="toggler-icon"></span>
+                        <span class="toggler-icon"></span>
+                    </button>
+
+                    <div class="navbar-collapse" id="navbarCollapse">
+                        <ul class="navbar-nav">
+                            <li class="nav-item">
+                                <a
+                                    th:href="@{/professors/{id}(id=${professor.id})}"
+                                    class="active"
+                                    >Dashboard</a
+                                >
+                            </li>
+                            <li class="nav-item">
+                                <a
+                                    th:href="@{/professors/{id}/sessions(id=${professor.id})}"
+                                    >Sessions</a
+                                >
+                            </li>
+                            <li class="nav-item">
+                                <a
+                                    th:href="@{/professors/{id}/justifications(id=${professor.id})}"
+                                    >Justifications</a
+                                >
+                            </li>
+                            <li class="nav-item">
+                                <form
+                                    th:action="@{/auth/logout}"
+                                    method="post"
+                                    style="display: inline"
+                                >
+                                    <button type="submit" class="btn-logout">
+                                        <i class="bi bi-box-arrow-right"></i>
+                                        Logout
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Dashboard Header -->
+        <header class="dashboard-header">
+            <div class="container">
+                <h1>
+                    Hi, Prof.
+                    <span th:text="${professor.familyName}">Professor</span>
+                </h1>
+                <p>
+                    <span th:if="${professor.department != null}">
+                        <span th:text="${professor.department.name}"
+                            >Department</span
+                        >
+                    </span>
+                    <span
+                        th:if="${professor.department == null}"
+                        style="opacity: 0.7"
+                    >
+                        No department assigned
+                    </span>
+                </p>
+            </div>
+        </header>
+
+        <!-- Dashboard Content -->
+        <main class="dashboard-content">
+            <div class="container">
+                <!-- Alerts -->
+                <div
+                    th:if="${success}"
+                    class="alert alert-success"
+                    style="margin-bottom: 1.5rem"
+                >
+                    <span th:text="${success}"></span>
+                </div>
+                <div
+                    th:if="${error}"
+                    class="alert alert-danger"
+                    style="margin-bottom: 1.5rem"
+                >
+                    <span th:text="${error}"></span>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="row g-3" style="margin-top: -20px">
+                    <div class="col-6 col-md-4">
+                        <div class="card text-center" style="padding: 1.25rem">
+                            <div
+                                style="
+                                    font-size: 2rem;
+                                    font-weight: 700;
+                                    color: var(--primary);
+                                "
+                                th:text="${#lists.size(sessions)}"
+                            >
+                                0
+                            </div>
+                            <div
+                                style="
+                                    font-size: 0.875rem;
+                                    color: var(--gray-500);
+                                    text-transform: uppercase;
+                                    letter-spacing: 0.05em;
+                                "
+                            >
+                                Sessions
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-4">
+                        <div class="card text-center" style="padding: 1.25rem">
+                            <div
+                                style="
+                                    font-size: 2rem;
+                                    font-weight: 700;
+                                    color: var(--success);
+                                "
+                                th:text="${#lists.size(sessions.?[sessionCode != null])}"
+                            >
+                                0
+                            </div>
+                            <div
+                                style="
+                                    font-size: 0.875rem;
+                                    color: var(--gray-500);
+                                    text-transform: uppercase;
+                                    letter-spacing: 0.05em;
+                                "
+                            >
+                                Active
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="card text-center" style="padding: 1.25rem">
+                            <div
+                                style="
+                                    font-size: 2rem;
+                                    font-weight: 700;
+                                    color: var(--warning);
+                                "
+                                th:text="${#lists.size(pendingJustifications)}"
+                            >
+                                0
+                            </div>
+                            <div
+                                style="
+                                    font-size: 0.875rem;
+                                    color: var(--gray-500);
+                                    text-transform: uppercase;
+                                    letter-spacing: 0.05em;
+                                "
+                            >
+                                Pending
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Content Grid - Equal Height Cards -->
+                <div class="row g-4 equal-height-row" style="margin-top: 1rem">
+                    <!-- Sessions -->
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Your Sessions</h3>
+                                <a
+                                    th:href="@{/professors/{id}/sessions(id=${professor.id})}"
+                                    class="btn btn-sm btn-outline"
+                                >
+                                    View All
+                                </a>
+                            </div>
+                            <div class="card-body p-0">
+                                <div
+                                    th:if="${#lists.isEmpty(sessions)}"
+                                    class="empty-state"
+                                >
+                                    <div class="empty-state-title">
+                                        No sessions found
+                                    </div>
+                                    <p class="empty-state-description">
+                                        You don't have any sessions scheduled.
+                                    </p>
+                                </div>
+
+                                <div
+                                    th:unless="${#lists.isEmpty(sessions)}"
+                                    class="table-responsive"
+                                >
+                                    <table class="table mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>Course</th>
+                                                <th>Date</th>
+                                                <th>Code</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr
+                                                th:each="sess, iterStat : ${sessions}"
+                                                th:if="${iterStat.index < 5}"
+                                            >
+                                                <td>
+                                                    <strong
+                                                        th:if="${sess.timeTable != null && sess.timeTable.courseAssignment != null && sess.timeTable.courseAssignment.course != null}"
+                                                        th:text="${sess.timeTable.courseAssignment.course.name}"
+                                                        >Course Name</strong
+                                                    >
+                                                    <strong
+                                                        th:unless="${sess.timeTable != null && sess.timeTable.courseAssignment != null && sess.timeTable.courseAssignment.course != null}"
+                                                        >Unknown Course</strong
+                                                    >
+                                                </td>
+                                                <td>
+                                                    <span
+                                                        th:if="${sess.calendar != null}"
+                                                        th:text="${#temporals.format(sess.calendar.date, 'EEE, MMM d')}"
+                                                        >Mon, Jan 1</span
+                                                    >
+                                                    <br />
+                                                    <small class="text-muted">
+                                                        <span
+                                                            th:if="${sess.startTime != null}"
+                                                            th:text="${#temporals.format(sess.startTime, 'HH:mm')}"
+                                                            >10:00</span
+                                                        >
+                                                        -
+                                                        <span
+                                                            th:if="${sess.endTime != null}"
+                                                            th:text="${#temporals.format(sess.endTime, 'HH:mm')}"
+                                                            >12:00</span
+                                                        >
+                                                    </small>
+                                                </td>
+                                                <td>
+                                                    <code
+                                                        th:if="${sess.sessionCode != null}"
+                                                        class="badge badge-success"
+                                                        style="
+                                                            font-size: 0.9rem;
+                                                            letter-spacing: 0.1rem;
+                                                        "
+                                                        th:text="${sess.sessionCode}"
+                                                        >123456</code
+                                                    >
+                                                    <span
+                                                        th:unless="${sess.sessionCode != null}"
+                                                        class="badge badge-secondary"
+                                                        >-</span
+                                                    >
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pending Justifications -->
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">
+                                    Pending Justifications
+                                </h3>
+                                <a
+                                    th:href="@{/professors/{id}/justifications(id=${professor.id})}"
+                                    class="btn btn-sm btn-outline"
+                                >
+                                    View All
+                                </a>
+                            </div>
+                            <div class="card-body p-0">
+                                <div
+                                    th:if="${#lists.isEmpty(pendingJustifications)}"
+                                    class="empty-state"
+                                >
+                                    <div class="empty-state-title">
+                                        All caught up!
+                                    </div>
+                                    <p class="empty-state-description">
+                                        No justifications waiting for review.
+                                    </p>
+                                </div>
+
+                                <div
+                                    th:unless="${#lists.isEmpty(pendingJustifications)}"
+                                    class="table-responsive"
+                                >
+                                    <table class="table mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>Student</th>
+                                                <th>Session</th>
+                                                <th>Submitted</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr
+                                                th:each="attendance, iterStat : ${pendingJustifications}"
+                                                th:if="${iterStat.index < 5}"
+                                            >
+                                                <td>
+                                                    <strong
+                                                        th:if="${attendance.student != null}"
+                                                        th:text="${attendance.student.firstName + ' ' + attendance.student.familyName}"
+                                                        >Student Name</strong
+                                                    >
+                                                    <br />
+                                                    <small
+                                                        class="text-muted"
+                                                        th:if="${attendance.student != null}"
+                                                        th:text="${attendance.student.studentId}"
+                                                        >STU001</small
+                                                    >
+                                                </td>
+                                                <td>
+                                                    <span
+                                                        th:if="${attendance.session != null && attendance.session.timeTable != null && attendance.session.timeTable.courseAssignment != null && attendance.session.timeTable.courseAssignment.course != null}"
+                                                        th:text="${attendance.session.timeTable.courseAssignment.course.name}"
+                                                        >Course</span
+                                                    >
+                                                    <br />
+                                                    <small
+                                                        class="text-muted"
+                                                        th:if="${attendance.session != null && attendance.session.calendar != null}"
+                                                        th:text="${#temporals.format(attendance.session.calendar.date, 'MMM d')}"
+                                                        >Jan 1</small
+                                                    >
+                                                </td>
+                                                <td>
+                                                    <span
+                                                        th:if="${attendance.justificationSubmittedAt != null}"
+                                                        th:text="${#temporals.format(attendance.justificationSubmittedAt, 'MMM d')}"
+                                                        >Jan 1</span
+                                                    >
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Weekly Timetable Card -->
+                <div class="row g-4" style="margin-top: 0.5rem">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">My Teaching Schedule</h3>
+                            </div>
+                            <div class="card-body" style="padding: 0">
+                                <div
+                                    th:if="${#lists.isEmpty(weeklyTimetable)}"
+                                    class="empty-state"
+                                    style="padding: 2rem"
+                                >
+                                    <div class="empty-state-title">
+                                        No schedule available
+                                    </div>
+                                    <p class="empty-state-description">
+                                        Your teaching schedule will appear here
+                                        once it's configured.
+                                    </p>
+                                </div>
+
+                                <div
+                                    th:unless="${#lists.isEmpty(weeklyTimetable)}"
+                                    class="timetable-container"
+                                >
+                                    <div class="timetable-grid">
+                                        <!-- Header Row -->
+                                        <div class="timetable-header">Time</div>
+                                        <div
+                                            class="timetable-header"
+                                            th:classappend="${currentDayOfWeek == 'MONDAY'} ? ' today' : ''"
+                                        >
+                                            Mon
+                                        </div>
+                                        <div
+                                            class="timetable-header"
+                                            th:classappend="${currentDayOfWeek == 'TUESDAY'} ? ' today' : ''"
+                                        >
+                                            Tue
+                                        </div>
+                                        <div
+                                            class="timetable-header"
+                                            th:classappend="${currentDayOfWeek == 'WEDNESDAY'} ? ' today' : ''"
+                                        >
+                                            Wed
+                                        </div>
+                                        <div
+                                            class="timetable-header"
+                                            th:classappend="${currentDayOfWeek == 'THURSDAY'} ? ' today' : ''"
+                                        >
+                                            Thu
+                                        </div>
+                                        <div
+                                            class="timetable-header"
+                                            th:classappend="${currentDayOfWeek == 'FRIDAY'} ? ' today' : ''"
+                                        >
+                                            Fri
+                                        </div>
+                                        <div
+                                            class="timetable-header"
+                                            th:classappend="${currentDayOfWeek == 'SATURDAY'} ? ' today' : ''"
+                                        >
+                                            Sat
+                                        </div>
+
+                                        <!-- Period 1: 08:30 - 10:30 -->
+                                        <div class="timetable-time">
+                                            <span class="timetable-time-start"
+                                                >08:30</span
+                                            >
+                                            <span class="timetable-time-end"
+                                                >10:30</span
+                                            >
+                                        </div>
+                                        <div class="timetable-cell">
+                                            <th:block
+                                                th:each="entry : ${weeklyTimetable}"
+                                            >
+                                                <div
+                                                    th:if="${entry.dayOfWeek != null && entry.dayOfWeek.name() == 'MONDAY' && entry.startTime != null && entry.startTime.hour == 8}"
+                                                    class="timetable-entry"
+                                                >
+                                                    <div
+                                                        class="timetable-entry-course"
+                                                        th:text="${entry.courseAssignment != null && entry.courseAssignment.course != null ? entry.courseAssignment.course.name : 'Course'}"
+                                                    >
+                                                        Course
+                                                    </div>
+                                                    <div
+                                                        class="timetable-entry-type"
+                                                        th:if="${entry.courseAssignment != null && entry.courseAssignment.type != null}"
+                                                        th:text="${entry.courseAssignment.type.name()}"
+                                                    >
+                                                        LECTURE
+                                                    </div>
+                                                </div>
+                                            </th:block>
+                                        </div>
+                                        <div class="timetable-cell">
+                                            <th:block
+                                                th:each="entry : ${weeklyTimetable}"
+                                            >
+                                                <div
+                                                    th:if="${entry.dayOfWeek != null && entry.dayOfWeek.name() == 'TUESDAY' && entry.startTime != null && entry.startTime.hour == 8}"
+                                                    class="timetable-entry"
+                                                >
+                                                    <div
+                                                        class="timetable-entry-course"
+                                                        th:text="${entry.courseAssignment != null && entry.courseAssignment.course != null ? entry.courseAssignment.course.name : 'Course'}"
+                                                    >
+                                                        Course
+                                                    </div>
+                                                    <div
+                                                        class="timetable-entry-type"
+                                                        th:if="${entry.courseAssignment != null && entry.courseAssignment.type != null}"
+                                                        th:text="${entry.courseAssignment.type.name()}"
+                                                    >
+                                                        LECTURE
+                                                    </div>
+                                                </div>
+                                            </th:block>
+                                        </div>
+                                        <div class="timetable-cell">
+                                            <th:block
+                                                th:each="entry : ${weeklyTimetable}"
+                                            >
+                                                <div
+                                                    th:if="${entry.dayOfWeek != null && entry.dayOfWeek.name() == 'WEDNESDAY' && entry.startTime != null && entry.startTime.hour == 8}"
+                                                    class="timetable-entry"
+                                                >
+                                                    <div
+                                                        class="timetable-entry-course"
+                                                        th:text="${entry.courseAssignment != null && entry.courseAssignment.course != null ? entry.courseAssignment.course.name : 'Course'}"
+                                                    >
+                                                        Course
+                                                    </div>
+                                                    <div
+                                                        class="timetable-entry-type"
+                                                        th:if="${entry.courseAssignment != null && entry.courseAssignment.type != null}"
+                                                        th:text="${entry.courseAssignment.type.name()}"
+                                                    >
+                                                        LECTURE
+                                                    </div>
+                                                </div>
+                                            </th:block>
+                                        </div>
+                                        <div class="timetable-cell">
+                                            <th:block
+                                                th:each="entry : ${weeklyTimetable}"
+                                            >
+                                                <div
+                                                    th:if="${entry.dayOfWeek != null && entry.dayOfWeek.name() == 'THURSDAY' && entry.startTime != null && entry.startTime.hour == 8}"
+                                                    class="timetable-entry"
+                                                >
+                                                    <div
+                                                        class="timetable-entry-course"
+                                                        th:text="${entry.courseAssignment != null && entry.courseAssignment.course != null ? entry.courseAssignment.course.name : 'Course'}"
+                                                    >
+                                                        Course
+                                                    </div>
+                                                    <div
+                                                        class="timetable-entry-type"
+                                                        th:if="${entry.courseAssignment != null && entry.courseAssignment.type != null}"
+                                                        th:text="${entry.courseAssignment.type.name()}"
+                                                    >
+                                                        LECTURE
+                                                    </div>
+                                                </div>
+                                            </th:block>
+                                        </div>
+                                        <div class="timetable-cell">
+                                            <th:block
+                                                th:each="entry : ${weeklyTimetable}"
+                                            >
+                                                <div
+                                                    th:if="${entry.dayOfWeek != null && entry.dayOfWeek.name() == 'FRIDAY' && entry.startTime != null && entry.startTime.hour == 8}"
+                                                    class="timetable-entry"
+                                                >
+                                                    <div
+                                                        class="timetable-entry-course"
+                                                        th:text="${entry.courseAssignment != null && entry.courseAssignment.course != null ? entry.courseAssignment.course.name : 'Course'}"
+                                                    >
+                                                        Course
+                                                    </div>
+                                                    <div
+                                                        class="timetable-entry-type"
+                                                        th:if="${entry.courseAssignment != null && entry.courseAssignment.type != null}"
+                                                        th:text="${entry.courseAssignment.type.name()}"
+                                                    >
+                                                        LECTURE
+                                                    </div>
+                                                </div>
+                                            </th:block>
+                                        </div>
+                                        <div class="timetable-cell">
+                                            <th:block
+                                                th:each="entry : ${weeklyTimetable}"
+                                            >
+                                                <div
+                                                    th:if="${entry.dayOfWeek != null && entry.dayOfWeek.name() == 'SATURDAY' && entry.startTime != null && entry.startTime.hour == 8}"
+                                                    class="timetable-entry"
+                                                >
+                                                    <div
+                                                        class="timetable-entry-course"
+                                                        th:text="${entry.courseAssignment != null && entry.courseAssignment.course != null ? entry.courseAssignment.course.name : 'Course'}"
+                                                    >
+                                                        Course
+                                                    </div>
+                                                    <div
+                                                        class="timetable-entry-type"
+                                                        th:if="${entry.courseAssignment != null && entry.courseAssignment.type != null}"
+                                                        th:text="${entry.courseAssignment.type.name()}"
+                                                    >
+                                                        LECTURE
+                                                    </div>
+                                                </div>
+                                            </th:block>
+                                        </div>
+
+                                        <!-- Period 2: 10:45 - 12:45 -->
+                                        <div class="timetable-time">
+                                            <span class="timetable-time-start"
+                                                >10:45</span
+                                            >
+                                            <span class="timetable-time-end"
+                                                >12:45</span
+                                            >
+                                        </div>
+                                        <div class="timetable-cell">
+                                            <th:block
+                                                th:each="entry : ${weeklyTimetable}"
+                                            >
+                                                <div
+                                                    th:if="${entry.dayOfWeek != null && entry.dayOfWeek.name() == 'MONDAY' && entry.startTime != null && entry.startTime.hour == 10}"
+                                                    class="timetable-entry"
+                                                >
+                                                    <div
+                                                        class="timetable-entry-course"
+                                                        th:text="${entry.courseAssignment != null && entry.courseAssignment.course != null ? entry.courseAssignment.course.name : 'Course'}"
+                                                    >
+                                                        Course
+                                                    </div>
+                                                    <div
+                                                        class="timetable-entry-type"
+                                                        th:if="${entry.courseAssignment != null && entry.courseAssignment.type != null}"
+                                                        th:text="${entry.courseAssignment.type.name()}"
+                                                    >
+                                                        LECTURE
+                                                    </div>
+                                                </div>
+                                            </th:block>
+                                        </div>
+                                        <div class="timetable-cell">
+                                            <th:block
+                                                th:each="entry : ${weeklyTimetable}"
+                                            >
+                                                <div
+                                                    th:if="${entry.dayOfWeek != null && entry.dayOfWeek.name() == 'TUESDAY' && entry.startTime != null && entry.startTime.hour == 10}"
+                                                    class="timetable-entry"
+                                                >
+                                                    <div
+                                                        class="timetable-entry-course"
+                                                        th:text="${entry.courseAssignment != null && entry.courseAssignment.course != null ? entry.courseAssignment.course.name : 'Course'}"
+                                                    >
+                                                        Course
+                                                    </div>
+                                                    <div
+                                                        class="timetable-entry-type"
+                                                        th:if="${entry.courseAssignment != null && entry.courseAssignment.type != null}"
+                                                        th:text="${entry.courseAssignment.type.name()}"
+                                                    >
+                                                        LECTURE
+                                                    </div>
+                                                </div>
+                                            </th:block>
+                                        </div>
+                                        <div class="timetable-cell">
+                                            <th:block
+                                                th:each="entry : ${weeklyTimetable}"
+                                            >
+                                                <div
+                                                    th:if="${entry.dayOfWeek != null && entry.dayOfWeek.name() == 'WEDNESDAY' && entry.startTime != null && entry.startTime.hour == 10}"
+                                                    class="timetable-entry"
+                                                >
+                                                    <div
+                                                        class="timetable-entry-course"
+                                                        th:text="${entry.courseAssignment != null && entry.courseAssignment.course != null ? entry.courseAssignment.course.name : 'Course'}"
+                                                    >
+                                                        Course
+                                                    </div>
+                                                    <div
+                                                        class="timetable-entry-type"
+                                                        th:if="${entry.courseAssignment != null && entry.courseAssignment.type != null}"
+                                                        th:text="${entry.courseAssignment.type.name()}"
+                                                    >
+                                                        LECTURE
+                                                    </div>
+                                                </div>
+                                            </th:block>
+                                        </div>
+                                        <div class="timetable-cell">
+                                            <th:block
+                                                th:each="entry : ${weeklyTimetable}"
+                                            >
+                                                <div
+                                                    th:if="${entry.dayOfWeek != null && entry.dayOfWeek.name() == 'THURSDAY' && entry.startTime != null && entry.startTime.hour == 10}"
+                                                    class="timetable-entry"
+                                                >
+                                                    <div
+                                                        class="timetable-entry-course"
+                                                        th:text="${entry.courseAssignment != null && entry.courseAssignment.course != null ? entry.courseAssignment.course.name : 'Course'}"
+                                                    >
+                                                        Course
+                                                    </div>
+                                                    <div
+                                                        class="timetable-entry-type"
+                                                        th:if="${entry.courseAssignment != null && entry.courseAssignment.type != null}"
+                                                        th:text="${entry.courseAssignment.type.name()}"
+                                                    >
+                                                        LECTURE
+                                                    </div>
+                                                </div>
+                                            </th:block>
+                                        </div>
+                                        <div class="timetable-cell">
+                                            <th:block
+                                                th:each="entry : ${weeklyTimetable}"
+                                            >
+                                                <div
+                                                    th:if="${entry.dayOfWeek != null && entry.dayOfWeek.name() == 'FRIDAY' && entry.startTime != null && entry.startTime.hour == 10}"
+                                                    class="timetable-entry"
+                                                >
+                                                    <div
+                                                        class="timetable-entry-course"
+                                                        th:text="${entry.courseAssignment != null && entry.courseAssignment.course != null ? entry.courseAssignment.course.name : 'Course'}"
+                                                    >
+                                                        Course
+                                                    </div>
+                                                    <div
+                                                        class="timetable-entry-type"
+                                                        th:if="${entry.courseAssignment != null && entry.courseAssignment.type != null}"
+                                                        th:text="${entry.courseAssignment.type.name()}"
+                                                    >
+                                                        LECTURE
+                                                    </div>
+                                                </div>
+                                            </th:block>
+                                        </div>
+                                        <div class="timetable-cell">
+                                            <th:block
+                                                th:each="entry : ${weeklyTimetable}"
+                                            >
+                                                <div
+                                                    th:if="${entry.dayOfWeek != null && entry.dayOfWeek.name() == 'SATURDAY' && entry.startTime != null && entry.startTime.hour == 10}"
+                                                    class="timetable-entry"
+                                                >
+                                                    <div
+                                                        class="timetable-entry-course"
+                                                        th:text="${entry.courseAssignment != null && entry.courseAssignment.course != null ? entry.courseAssignment.course.name : 'Course'}"
+                                                    >
+                                                        Course
+                                                    </div>
+                                                    <div
+                                                        class="timetable-entry-type"
+                                                        th:if="${entry.courseAssignment != null && entry.courseAssignment.type != null}"
+                                                        th:text="${entry.courseAssignment.type.name()}"
+                                                    >
+                                                        LECTURE
+                                                    </div>
+                                                </div>
+                                            </th:block>
+                                        </div>
+
+                                        <!-- Period 3: 13:00 - 14:00 -->
+                                        <div class="timetable-time">
+                                            <span class="timetable-time-start"
+                                                >13:00</span
+                                            >
+                                            <span class="timetable-time-end"
+                                                >14:00</span
+                                            >
+                                        </div>
+                                        <div class="timetable-cell">
+                                            <th:block
+                                                th:each="entry : ${weeklyTimetable}"
+                                            >
+                                                <div
+                                                    th:if="${entry.dayOfWeek != null && entry.dayOfWeek.name() == 'MONDAY' && entry.startTime != null && entry.startTime.hour == 13}"
+                                                    class="timetable-entry"
+                                                >
+                                                    <div
+                                                        class="timetable-entry-course"
+                                                        th:text="${entry.courseAssignment != null && entry.courseAssignment.course != null ? entry.courseAssignment.course.name : 'Course'}"
+                                                    >
+                                                        Course
+                                                    </div>
+                                                    <div
+                                                        class="timetable-entry-type"
+                                                        th:if="${entry.courseAssignment != null && entry.courseAssignment.type != null}"
+                                                        th:text="${entry.courseAssignment.type.name()}"
+                                                    >
+                                                        LECTURE
+                                                    </div>
+                                                </div>
+                                            </th:block>
+                                        </div>
+                                        <div class="timetable-cell">
+                                            <th:block
+                                                th:each="entry : ${weeklyTimetable}"
+                                            >
+                                                <div
+                                                    th:if="${entry.dayOfWeek != null && entry.dayOfWeek.name() == 'TUESDAY' && entry.startTime != null && entry.startTime.hour == 13}"
+                                                    class="timetable-entry"
+                                                >
+                                                    <div
+                                                        class="timetable-entry-course"
+                                                        th:text="${entry.courseAssignment != null && entry.courseAssignment.course != null ? entry.courseAssignment.course.name : 'Course'}"
+                                                    >
+                                                        Course
+                                                    </div>
+                                                    <div
+                                                        class="timetable-entry-type"
+                                                        th:if="${entry.courseAssignment != null && entry.courseAssignment.type != null}"
+                                                        th:text="${entry.courseAssignment.type.name()}"
+                                                    >
+                                                        LECTURE
+                                                    </div>
+                                                </div>
+                                            </th:block>
+                                        </div>
+                                        <div class="timetable-cell">
+                                            <th:block
+                                                th:each="entry : ${weeklyTimetable}"
+                                            >
+                                                <div
+                                                    th:if="${entry.dayOfWeek != null && entry.dayOfWeek.name() == 'WEDNESDAY' && entry.startTime != null && entry.startTime.hour == 13}"
+                                                    class="timetable-entry"
+                                                >
+                                                    <div
+                                                        class="timetable-entry-course"
+                                                        th:text="${entry.courseAssignment != null && entry.courseAssignment.course != null ? entry.courseAssignment.course.name : 'Course'}"
+                                                    >
+                                                        Course
+                                                    </div>
+                                                    <div
+                                                        class="timetable-entry-type"
+                                                        th:if="${entry.courseAssignment != null && entry.courseAssignment.type != null}"
+                                                        th:text="${entry.courseAssignment.type.name()}"
+                                                    >
+                                                        LECTURE
+                                                    </div>
+                                                </div>
+                                            </th:block>
+                                        </div>
+                                        <div class="timetable-cell">
+                                            <th:block
+                                                th:each="entry : ${weeklyTimetable}"
+                                            >
+                                                <div
+                                                    th:if="${entry.dayOfWeek != null && entry.dayOfWeek.name() == 'THURSDAY' && entry.startTime != null && entry.startTime.hour == 13}"
+                                                    class="timetable-entry"
+                                                >
+                                                    <div
+                                                        class="timetable-entry-course"
+                                                        th:text="${entry.courseAssignment != null && entry.courseAssignment.course != null ? entry.courseAssignment.course.name : 'Course'}"
+                                                    >
+                                                        Course
+                                                    </div>
+                                                    <div
+                                                        class="timetable-entry-type"
+                                                        th:if="${entry.courseAssignment != null && entry.courseAssignment.type != null}"
+                                                        th:text="${entry.courseAssignment.type.name()}"
+                                                    >
+                                                        LECTURE
+                                                    </div>
+                                                </div>
+                                            </th:block>
+                                        </div>
+                                        <div class="timetable-cell">
+                                            <th:block
+                                                th:each="entry : ${weeklyTimetable}"
+                                            >
+                                                <div
+                                                    th:if="${entry.dayOfWeek != null && entry.dayOfWeek.name() == 'FRIDAY' && entry.startTime != null && entry.startTime.hour == 13}"
+                                                    class="timetable-entry"
+                                                >
+                                                    <div
+                                                        class="timetable-entry-course"
+                                                        th:text="${entry.courseAssignment != null && entry.courseAssignment.course != null ? entry.courseAssignment.course.name : 'Course'}"
+                                                    >
+                                                        Course
+                                                    </div>
+                                                    <div
+                                                        class="timetable-entry-type"
+                                                        th:if="${entry.courseAssignment != null && entry.courseAssignment.type != null}"
+                                                        th:text="${entry.courseAssignment.type.name()}"
+                                                    >
+                                                        LECTURE
+                                                    </div>
+                                                </div>
+                                            </th:block>
+                                        </div>
+                                        <div class="timetable-cell">
+                                            <th:block
+                                                th:each="entry : ${weeklyTimetable}"
+                                            >
+                                                <div
+                                                    th:if="${entry.dayOfWeek != null && entry.dayOfWeek.name() == 'SATURDAY' && entry.startTime != null && entry.startTime.hour == 13}"
+                                                    class="timetable-entry"
+                                                >
+                                                    <div
+                                                        class="timetable-entry-course"
+                                                        th:text="${entry.courseAssignment != null && entry.courseAssignment.course != null ? entry.courseAssignment.course.name : 'Course'}"
+                                                    >
+                                                        Course
+                                                    </div>
+                                                    <div
+                                                        class="timetable-entry-type"
+                                                        th:if="${entry.courseAssignment != null && entry.courseAssignment.type != null}"
+                                                        th:text="${entry.courseAssignment.type.name()}"
+                                                    >
+                                                        LECTURE
+                                                    </div>
+                                                </div>
+                                            </th:block>
+                                        </div>
+
+                                        <!-- Period 4: 14:00 - 16:00 -->
+                                        <div class="timetable-time">
+                                            <span class="timetable-time-start"
+                                                >14:00</span
+                                            >
+                                            <span class="timetable-time-end"
+                                                >16:00</span
+                                            >
+                                        </div>
+                                        <div class="timetable-cell">
+                                            <th:block
+                                                th:each="entry : ${weeklyTimetable}"
+                                            >
+                                                <div
+                                                    th:if="${entry.dayOfWeek != null && entry.dayOfWeek.name() == 'MONDAY' && entry.startTime != null && entry.startTime.hour == 14}"
+                                                    class="timetable-entry"
+                                                >
+                                                    <div
+                                                        class="timetable-entry-course"
+                                                        th:text="${entry.courseAssignment != null && entry.courseAssignment.course != null ? entry.courseAssignment.course.name : 'Course'}"
+                                                    >
+                                                        Course
+                                                    </div>
+                                                    <div
+                                                        class="timetable-entry-type"
+                                                        th:if="${entry.courseAssignment != null && entry.courseAssignment.type != null}"
+                                                        th:text="${entry.courseAssignment.type.name()}"
+                                                    >
+                                                        LECTURE
+                                                    </div>
+                                                </div>
+                                            </th:block>
+                                        </div>
+                                        <div class="timetable-cell">
+                                            <th:block
+                                                th:each="entry : ${weeklyTimetable}"
+                                            >
+                                                <div
+                                                    th:if="${entry.dayOfWeek != null && entry.dayOfWeek.name() == 'TUESDAY' && entry.startTime != null && entry.startTime.hour == 14}"
+                                                    class="timetable-entry"
+                                                >
+                                                    <div
+                                                        class="timetable-entry-course"
+                                                        th:text="${entry.courseAssignment != null && entry.courseAssignment.course != null ? entry.courseAssignment.course.name : 'Course'}"
+                                                    >
+                                                        Course
+                                                    </div>
+                                                    <div
+                                                        class="timetable-entry-type"
+                                                        th:if="${entry.courseAssignment != null && entry.courseAssignment.type != null}"
+                                                        th:text="${entry.courseAssignment.type.name()}"
+                                                    >
+                                                        LECTURE
+                                                    </div>
+                                                </div>
+                                            </th:block>
+                                        </div>
+                                        <div class="timetable-cell">
+                                            <th:block
+                                                th:each="entry : ${weeklyTimetable}"
+                                            >
+                                                <div
+                                                    th:if="${entry.dayOfWeek != null && entry.dayOfWeek.name() == 'WEDNESDAY' && entry.startTime != null && entry.startTime.hour == 14}"
+                                                    class="timetable-entry"
+                                                >
+                                                    <div
+                                                        class="timetable-entry-course"
+                                                        th:text="${entry.courseAssignment != null && entry.courseAssignment.course != null ? entry.courseAssignment.course.name : 'Course'}"
+                                                    >
+                                                        Course
+                                                    </div>
+                                                    <div
+                                                        class="timetable-entry-type"
+                                                        th:if="${entry.courseAssignment != null && entry.courseAssignment.type != null}"
+                                                        th:text="${entry.courseAssignment.type.name()}"
+                                                    >
+                                                        LECTURE
+                                                    </div>
+                                                </div>
+                                            </th:block>
+                                        </div>
+                                        <div class="timetable-cell">
+                                            <th:block
+                                                th:each="entry : ${weeklyTimetable}"
+                                            >
+                                                <div
+                                                    th:if="${entry.dayOfWeek != null && entry.dayOfWeek.name() == 'THURSDAY' && entry.startTime != null && entry.startTime.hour == 14}"
+                                                    class="timetable-entry"
+                                                >
+                                                    <div
+                                                        class="timetable-entry-course"
+                                                        th:text="${entry.courseAssignment != null && entry.courseAssignment.course != null ? entry.courseAssignment.course.name : 'Course'}"
+                                                    >
+                                                        Course
+                                                    </div>
+                                                    <div
+                                                        class="timetable-entry-type"
+                                                        th:if="${entry.courseAssignment != null && entry.courseAssignment.type != null}"
+                                                        th:text="${entry.courseAssignment.type.name()}"
+                                                    >
+                                                        LECTURE
+                                                    </div>
+                                                </div>
+                                            </th:block>
+                                        </div>
+                                        <div class="timetable-cell">
+                                            <th:block
+                                                th:each="entry : ${weeklyTimetable}"
+                                            >
+                                                <div
+                                                    th:if="${entry.dayOfWeek != null && entry.dayOfWeek.name() == 'FRIDAY' && entry.startTime != null && entry.startTime.hour == 14}"
+                                                    class="timetable-entry"
+                                                >
+                                                    <div
+                                                        class="timetable-entry-course"
+                                                        th:text="${entry.courseAssignment != null && entry.courseAssignment.course != null ? entry.courseAssignment.course.name : 'Course'}"
+                                                    >
+                                                        Course
+                                                    </div>
+                                                    <div
+                                                        class="timetable-entry-type"
+                                                        th:if="${entry.courseAssignment != null && entry.courseAssignment.type != null}"
+                                                        th:text="${entry.courseAssignment.type.name()}"
+                                                    >
+                                                        LECTURE
+                                                    </div>
+                                                </div>
+                                            </th:block>
+                                        </div>
+                                        <div class="timetable-cell">
+                                            <th:block
+                                                th:each="entry : ${weeklyTimetable}"
+                                            >
+                                                <div
+                                                    th:if="${entry.dayOfWeek != null && entry.dayOfWeek.name() == 'SATURDAY' && entry.startTime != null && entry.startTime.hour == 14}"
+                                                    class="timetable-entry"
+                                                >
+                                                    <div
+                                                        class="timetable-entry-course"
+                                                        th:text="${entry.courseAssignment != null && entry.courseAssignment.course != null ? entry.courseAssignment.course.name : 'Course'}"
+                                                    >
+                                                        Course
+                                                    </div>
+                                                    <div
+                                                        class="timetable-entry-type"
+                                                        th:if="${entry.courseAssignment != null && entry.courseAssignment.type != null}"
+                                                        th:text="${entry.courseAssignment.type.name()}"
+                                                    >
+                                                        LECTURE
+                                                    </div>
+                                                </div>
+                                            </th:block>
+                                        </div>
+
+                                        <!-- Period 5: 16:15 - 18:15 -->
+                                        <div class="timetable-time">
+                                            <span class="timetable-time-start"
+                                                >16:15</span
+                                            >
+                                            <span class="timetable-time-end"
+                                                >18:15</span
+                                            >
+                                        </div>
+                                        <div class="timetable-cell">
+                                            <th:block
+                                                th:each="entry : ${weeklyTimetable}"
+                                            >
+                                                <div
+                                                    th:if="${entry.dayOfWeek != null && entry.dayOfWeek.name() == 'MONDAY' && entry.startTime != null && entry.startTime.hour == 16}"
+                                                    class="timetable-entry"
+                                                >
+                                                    <div
+                                                        class="timetable-entry-course"
+                                                        th:text="${entry.courseAssignment != null && entry.courseAssignment.course != null ? entry.courseAssignment.course.name : 'Course'}"
+                                                    >
+                                                        Course
+                                                    </div>
+                                                    <div
+                                                        class="timetable-entry-type"
+                                                        th:if="${entry.courseAssignment != null && entry.courseAssignment.type != null}"
+                                                        th:text="${entry.courseAssignment.type.name()}"
+                                                    >
+                                                        LECTURE
+                                                    </div>
+                                                </div>
+                                            </th:block>
+                                        </div>
+                                        <div class="timetable-cell">
+                                            <th:block
+                                                th:each="entry : ${weeklyTimetable}"
+                                            >
+                                                <div
+                                                    th:if="${entry.dayOfWeek != null && entry.dayOfWeek.name() == 'TUESDAY' && entry.startTime != null && entry.startTime.hour == 16}"
+                                                    class="timetable-entry"
+                                                >
+                                                    <div
+                                                        class="timetable-entry-course"
+                                                        th:text="${entry.courseAssignment != null && entry.courseAssignment.course != null ? entry.courseAssignment.course.name : 'Course'}"
+                                                    >
+                                                        Course
+                                                    </div>
+                                                    <div
+                                                        class="timetable-entry-type"
+                                                        th:if="${entry.courseAssignment != null && entry.courseAssignment.type != null}"
+                                                        th:text="${entry.courseAssignment.type.name()}"
+                                                    >
+                                                        LECTURE
+                                                    </div>
+                                                </div>
+                                            </th:block>
+                                        </div>
+                                        <div class="timetable-cell">
+                                            <th:block
+                                                th:each="entry : ${weeklyTimetable}"
+                                            >
+                                                <div
+                                                    th:if="${entry.dayOfWeek != null && entry.dayOfWeek.name() == 'WEDNESDAY' && entry.startTime != null && entry.startTime.hour == 16}"
+                                                    class="timetable-entry"
+                                                >
+                                                    <div
+                                                        class="timetable-entry-course"
+                                                        th:text="${entry.courseAssignment != null && entry.courseAssignment.course != null ? entry.courseAssignment.course.name : 'Course'}"
+                                                    >
+                                                        Course
+                                                    </div>
+                                                    <div
+                                                        class="timetable-entry-type"
+                                                        th:if="${entry.courseAssignment != null && entry.courseAssignment.type != null}"
+                                                        th:text="${entry.courseAssignment.type.name()}"
+                                                    >
+                                                        LECTURE
+                                                    </div>
+                                                </div>
+                                            </th:block>
+                                        </div>
+                                        <div class="timetable-cell">
+                                            <th:block
+                                                th:each="entry : ${weeklyTimetable}"
+                                            >
+                                                <div
+                                                    th:if="${entry.dayOfWeek != null && entry.dayOfWeek.name() == 'THURSDAY' && entry.startTime != null && entry.startTime.hour == 16}"
+                                                    class="timetable-entry"
+                                                >
+                                                    <div
+                                                        class="timetable-entry-course"
+                                                        th:text="${entry.courseAssignment != null && entry.courseAssignment.course != null ? entry.courseAssignment.course.name : 'Course'}"
+                                                    >
+                                                        Course
+                                                    </div>
+                                                    <div
+                                                        class="timetable-entry-type"
+                                                        th:if="${entry.courseAssignment != null && entry.courseAssignment.type != null}"
+                                                        th:text="${entry.courseAssignment.type.name()}"
+                                                    >
+                                                        LECTURE
+                                                    </div>
+                                                </div>
+                                            </th:block>
+                                        </div>
+                                        <div class="timetable-cell">
+                                            <th:block
+                                                th:each="entry : ${weeklyTimetable}"
+                                            >
+                                                <div
+                                                    th:if="${entry.dayOfWeek != null && entry.dayOfWeek.name() == 'FRIDAY' && entry.startTime != null && entry.startTime.hour == 16}"
+                                                    class="timetable-entry"
+                                                >
+                                                    <div
+                                                        class="timetable-entry-course"
+                                                        th:text="${entry.courseAssignment != null && entry.courseAssignment.course != null ? entry.courseAssignment.course.name : 'Course'}"
+                                                    >
+                                                        Course
+                                                    </div>
+                                                    <div
+                                                        class="timetable-entry-type"
+                                                        th:if="${entry.courseAssignment != null && entry.courseAssignment.type != null}"
+                                                        th:text="${entry.courseAssignment.type.name()}"
+                                                    >
+                                                        LECTURE
+                                                    </div>
+                                                </div>
+                                            </th:block>
+                                        </div>
+                                        <div class="timetable-cell">
+                                            <th:block
+                                                th:each="entry : ${weeklyTimetable}"
+                                            >
+                                                <div
+                                                    th:if="${entry.dayOfWeek != null && entry.dayOfWeek.name() == 'SATURDAY' && entry.startTime != null && entry.startTime.hour == 16}"
+                                                    class="timetable-entry"
+                                                >
+                                                    <div
+                                                        class="timetable-entry-course"
+                                                        th:text="${entry.courseAssignment != null && entry.courseAssignment.course != null ? entry.courseAssignment.course.name : 'Course'}"
+                                                    >
+                                                        Course
+                                                    </div>
+                                                    <div
+                                                        class="timetable-entry-type"
+                                                        th:if="${entry.courseAssignment != null && entry.courseAssignment.type != null}"
+                                                        th:text="${entry.courseAssignment.type.name()}"
+                                                    >
+                                                        LECTURE
+                                                    </div>
+                                                </div>
+                                            </th:block>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="container">
+                <p>&copy; 2025 Marked. All rights reserved.</p>
+            </div>
+        </footer>
+
+        <script>
+            function toggleMenu() {
+                const navbar = document.getElementById("navbarCollapse");
+                navbar.classList.toggle("show");
+            }
+
+            // Auto-dismiss alerts after 5 seconds
+            document.addEventListener("DOMContentLoaded", function () {
+                const alerts = document.querySelectorAll(".alert");
+                alerts.forEach(function (alert) {
+                    setTimeout(function () {
+                        alert.style.transition = "opacity 0.5s";
+                        alert.style.opacity = "0";
+                        setTimeout(function () {
+                            alert.remove();
+                        }, 500);
+                    }, 5000);
+                });
+            });
+        </script>
+    </body>
+</html>

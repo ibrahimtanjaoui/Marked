@@ -1,0 +1,565 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Attendance Detail | Marked</title>
+        <link rel="icon" type="image/svg+xml" th:href="@{/img/favicon.svg}" />
+        <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}" />
+        <link rel="stylesheet" th:href="@{/css/style.css}" />
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"
+        />
+    </head>
+    <body class="page-wrapper">
+        <nav class="navbar-area sticky">
+            <div class="container">
+                <div class="navbar">
+                    <a th:href="@{/}" class="navbar-brand">
+                        <span class="brand-icon">M</span>
+                        Marked
+                    </a>
+
+                    <button
+                        class="navbar-toggler"
+                        type="button"
+                        onclick="toggleMenu()"
+                    >
+                        <span class="toggler-icon"></span>
+                        <span class="toggler-icon"></span>
+                        <span class="toggler-icon"></span>
+                    </button>
+
+                    <div class="navbar-collapse" id="navbarCollapse">
+                        <ul class="navbar-nav">
+                            <li class="nav-item">
+                                <a th:href="@{/students/{id}(id=${student.id})}"
+                                    >Dashboard</a
+                                >
+                            </li>
+                            <li class="nav-item">
+                                <a
+                                    th:href="@{/students/{id}/attendance(id=${student.id})}"
+                                    class="active"
+                                    >Attendance</a
+                                >
+                            </li>
+                            <li class="nav-item">
+                                <a
+                                    th:href="@{/students/{id}/attendance/mark(id=${student.id})}"
+                                    >Mark Attendance</a
+                                >
+                            </li>
+                            <li class="nav-item">
+                                <form
+                                    th:action="@{/auth/logout}"
+                                    method="post"
+                                    style="display: inline"
+                                >
+                                    <button type="submit" class="btn-logout">
+                                        <i class="bi bi-box-arrow-right"></i>
+                                        Logout
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Dashboard Header -->
+        <header class="dashboard-header">
+            <div class="container">
+                <h1>Attendance Detail</h1>
+                <p
+                    th:if="${attendance != null && attendance.session != null && attendance.session.timeTable != null && attendance.session.timeTable.courseAssignment != null && attendance.session.timeTable.courseAssignment.course != null}"
+                    th:text="${attendance.session.timeTable.courseAssignment.course.name}"
+                >
+                    Course Name
+                </p>
+                <p
+                    th:unless="${attendance != null && attendance.session != null && attendance.session.timeTable != null && attendance.session.timeTable.courseAssignment != null && attendance.session.timeTable.courseAssignment.course != null}"
+                >
+                    Session Details
+                </p>
+            </div>
+        </header>
+
+        <main class="dashboard-content">
+            <div class="container">
+                <!-- Flash Messages -->
+                <div
+                    th:if="${success}"
+                    class="alert alert-success"
+                    style="margin-bottom: 1.5rem"
+                    th:text="${success}"
+                ></div>
+                <div
+                    th:if="${error}"
+                    class="alert alert-danger"
+                    style="margin-bottom: 1.5rem"
+                    th:text="${error}"
+                ></div>
+
+                <!-- No Attendance Record -->
+                <div th:if="${attendance == null}" class="row g-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="empty-state" style="padding: 3rem">
+                                <div class="empty-state-title">
+                                    No Attendance Record
+                                </div>
+                                <p class="empty-state-description">
+                                    There is no attendance record for this
+                                    session yet.
+                                </p>
+                                <a
+                                    th:href="@{/students/{id}/attendance/mark(id=${student.id}, sessionId=${sessionId})}"
+                                    class="btn btn-primary"
+                                >
+                                    Mark Attendance
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Attendance Details -->
+                <div th:if="${attendance != null}" class="row g-4">
+                    <!-- Session Info Card -->
+                    <div class="col-lg-8">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Session Information</h3>
+                                <span
+                                    th:if="${attendance.status.name() == 'PRESENT'}"
+                                    class="badge badge-success"
+                                    >Present</span
+                                >
+                                <span
+                                    th:if="${attendance.status.name() == 'ABSENT'}"
+                                    class="badge badge-danger"
+                                    >Absent</span
+                                >
+                                <span
+                                    th:if="${attendance.status.name() == 'EXCUSED'}"
+                                    class="badge badge-warning"
+                                    >Excused</span
+                                >
+                                <span
+                                    th:if="${attendance.status.name() == 'NOT_MARKED'}"
+                                    class="badge badge-secondary"
+                                    >Not Marked</span
+                                >
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table mb-0">
+                                        <tbody>
+                                            <tr>
+                                                <td
+                                                    style="
+                                                        width: 140px;
+                                                        font-weight: 600;
+                                                        color: var(--gray-600);
+                                                    "
+                                                >
+                                                    Course
+                                                </td>
+                                                <td
+                                                    th:if="${attendance.session != null && attendance.session.timeTable != null && attendance.session.timeTable.courseAssignment != null && attendance.session.timeTable.courseAssignment.course != null}"
+                                                    th:text="${attendance.session.timeTable.courseAssignment.course.name}"
+                                                >
+                                                    Course Name
+                                                </td>
+                                                <td
+                                                    th:unless="${attendance.session != null && attendance.session.timeTable != null && attendance.session.timeTable.courseAssignment != null && attendance.session.timeTable.courseAssignment.course != null}"
+                                                    class="text-muted"
+                                                >
+                                                    -
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td
+                                                    style="
+                                                        font-weight: 600;
+                                                        color: var(--gray-600);
+                                                    "
+                                                >
+                                                    Professor
+                                                </td>
+                                                <td
+                                                    th:if="${attendance.session != null && attendance.session.timeTable != null && attendance.session.timeTable.courseAssignment != null && attendance.session.timeTable.courseAssignment.professor != null}"
+                                                    th:text="${attendance.session.timeTable.courseAssignment.professor.firstName + ' ' + attendance.session.timeTable.courseAssignment.professor.familyName}"
+                                                >
+                                                    Professor Name
+                                                </td>
+                                                <td
+                                                    th:unless="${attendance.session != null && attendance.session.timeTable != null && attendance.session.timeTable.courseAssignment != null && attendance.session.timeTable.courseAssignment.professor != null}"
+                                                    class="text-muted"
+                                                >
+                                                    -
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td
+                                                    style="
+                                                        font-weight: 600;
+                                                        color: var(--gray-600);
+                                                    "
+                                                >
+                                                    Date
+                                                </td>
+                                                <td
+                                                    th:if="${attendance.session != null && attendance.session.calendar != null}"
+                                                    th:text="${#temporals.format(attendance.session.calendar.date, 'EEEE, MMMM d, yyyy')}"
+                                                >
+                                                    Monday, January 1, 2025
+                                                </td>
+                                                <td
+                                                    th:unless="${attendance.session != null && attendance.session.calendar != null}"
+                                                    class="text-muted"
+                                                >
+                                                    -
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td
+                                                    style="
+                                                        font-weight: 600;
+                                                        color: var(--gray-600);
+                                                    "
+                                                >
+                                                    Time
+                                                </td>
+                                                <td>
+                                                    <span
+                                                        th:if="${attendance.session != null && attendance.session.startTime != null}"
+                                                        th:text="${#temporals.format(attendance.session.startTime, 'HH:mm')}"
+                                                        >10:00</span
+                                                    >
+                                                    <span
+                                                        th:if="${attendance.session != null && attendance.session.startTime != null && attendance.session.endTime != null}"
+                                                    >
+                                                        -
+                                                    </span>
+                                                    <span
+                                                        th:if="${attendance.session != null && attendance.session.endTime != null}"
+                                                        th:text="${#temporals.format(attendance.session.endTime, 'HH:mm')}"
+                                                        >12:00</span
+                                                    >
+                                                    <span
+                                                        th:if="${attendance.session == null || (attendance.session.startTime == null && attendance.session.endTime == null)}"
+                                                        class="text-muted"
+                                                        >-</span
+                                                    >
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td
+                                                    style="
+                                                        font-weight: 600;
+                                                        color: var(--gray-600);
+                                                    "
+                                                >
+                                                    Type
+                                                </td>
+                                                <td
+                                                    th:if="${attendance.session != null && attendance.session.timeTable != null && attendance.session.timeTable.courseAssignment != null && attendance.session.timeTable.courseAssignment.type != null}"
+                                                    th:text="${attendance.session.timeTable.courseAssignment.type.name()}"
+                                                >
+                                                    LECTURE
+                                                </td>
+                                                <td
+                                                    th:unless="${attendance.session != null && attendance.session.timeTable != null && attendance.session.timeTable.courseAssignment != null && attendance.session.timeTable.courseAssignment.type != null}"
+                                                    class="text-muted"
+                                                >
+                                                    -
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td
+                                                    style="
+                                                        font-weight: 600;
+                                                        color: var(--gray-600);
+                                                    "
+                                                >
+                                                    Marked On
+                                                </td>
+                                                <td
+                                                    th:if="${attendance.createdOn != null}"
+                                                    th:text="${#temporals.format(attendance.createdOn, 'MMM d, yyyy ''at'' HH:mm')}"
+                                                >
+                                                    Jan 1, 2025 at 10:05
+                                                </td>
+                                                <td
+                                                    th:unless="${attendance.createdOn != null}"
+                                                    class="text-muted"
+                                                >
+                                                    -
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Justification Card -->
+                    <div class="col-lg-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Justification</h3>
+                            </div>
+                            <div class="card-body">
+                                <!-- No Justification -->
+                                <div
+                                    th:if="${attendance.justificationStatus == null || attendance.justificationStatus.name() == 'NOT_SUBMITTED'}"
+                                >
+                                    <p
+                                        class="text-muted"
+                                        style="margin-bottom: 1rem"
+                                    >
+                                        No justification submitted
+                                    </p>
+                                    <a
+                                        th:if="${attendance.status.name() == 'ABSENT' || attendance.status.name() == 'NOT_MARKED'}"
+                                        th:href="@{/students/{studentId}/attendance/sessions/{sessionId}/justify(studentId=${student.id}, sessionId=${attendance.session.id})}"
+                                        class="btn btn-warning btn-sm"
+                                    >
+                                        Submit Justification
+                                    </a>
+                                </div>
+
+                                <!-- Pending Justification -->
+                                <div
+                                    th:if="${attendance.justificationStatus != null && attendance.justificationStatus.name() == 'PENDING'}"
+                                >
+                                    <div style="margin-bottom: 1rem">
+                                        <span
+                                            class="badge badge-warning"
+                                            style="margin-bottom: 0.75rem"
+                                            >Pending Review</span
+                                        >
+                                        <p
+                                            style="
+                                                font-size: 0.875rem;
+                                                color: var(--gray-600);
+                                                margin-bottom: 0.5rem;
+                                            "
+                                        >
+                                            <strong>Submitted:</strong>
+                                            <span
+                                                th:if="${attendance.justificationSubmittedAt != null}"
+                                                th:text="${#temporals.format(attendance.justificationSubmittedAt, 'MMM d, yyyy')}"
+                                                >Jan 1, 2025</span
+                                            >
+                                        </p>
+                                    </div>
+                                    <div
+                                        style="
+                                            background: var(--gray-50);
+                                            padding: 0.75rem;
+                                            border-radius: var(--radius);
+                                            font-size: 0.875rem;
+                                        "
+                                    >
+                                        <strong
+                                            style="
+                                                display: block;
+                                                margin-bottom: 0.25rem;
+                                                color: var(--gray-600);
+                                            "
+                                            >Reason:</strong
+                                        >
+                                        <p
+                                            th:text="${attendance.justificationText}"
+                                            style="margin: 0"
+                                        >
+                                            Justification text
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Approved Justification -->
+                                <div
+                                    th:if="${attendance.justificationStatus != null && attendance.justificationStatus.name() == 'APPROVED'}"
+                                >
+                                    <div style="margin-bottom: 1rem">
+                                        <span
+                                            class="badge badge-success"
+                                            style="margin-bottom: 0.75rem"
+                                            >Approved</span
+                                        >
+                                        <p
+                                            style="
+                                                font-size: 0.875rem;
+                                                color: var(--gray-600);
+                                                margin-bottom: 0.5rem;
+                                            "
+                                        >
+                                            <strong>Reviewed:</strong>
+                                            <span
+                                                th:if="${attendance.justificationReviewedAt != null}"
+                                                th:text="${#temporals.format(attendance.justificationReviewedAt, 'MMM d, yyyy')}"
+                                                >Jan 2, 2025</span
+                                            >
+                                        </p>
+                                    </div>
+                                    <div
+                                        style="
+                                            background: var(--gray-50);
+                                            padding: 0.75rem;
+                                            border-radius: var(--radius);
+                                            font-size: 0.875rem;
+                                        "
+                                    >
+                                        <strong
+                                            style="
+                                                display: block;
+                                                margin-bottom: 0.25rem;
+                                                color: var(--gray-600);
+                                            "
+                                            >Reason:</strong
+                                        >
+                                        <p
+                                            th:text="${attendance.justificationText}"
+                                            style="margin: 0"
+                                        >
+                                            Justification text
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Rejected Justification -->
+                                <div
+                                    th:if="${attendance.justificationStatus != null && attendance.justificationStatus.name() == 'REJECTED'}"
+                                >
+                                    <div style="margin-bottom: 1rem">
+                                        <span
+                                            class="badge badge-danger"
+                                            style="margin-bottom: 0.75rem"
+                                            >Rejected</span
+                                        >
+                                        <p
+                                            style="
+                                                font-size: 0.875rem;
+                                                color: var(--gray-600);
+                                                margin-bottom: 0.5rem;
+                                            "
+                                        >
+                                            <strong>Reviewed:</strong>
+                                            <span
+                                                th:if="${attendance.justificationReviewedAt != null}"
+                                                th:text="${#temporals.format(attendance.justificationReviewedAt, 'MMM d, yyyy')}"
+                                                >Jan 2, 2025</span
+                                            >
+                                        </p>
+                                    </div>
+                                    <div
+                                        style="
+                                            background: var(--gray-50);
+                                            padding: 0.75rem;
+                                            border-radius: var(--radius);
+                                            font-size: 0.875rem;
+                                            margin-bottom: 1rem;
+                                        "
+                                    >
+                                        <strong
+                                            style="
+                                                display: block;
+                                                margin-bottom: 0.25rem;
+                                                color: var(--gray-600);
+                                            "
+                                            >Your Reason:</strong
+                                        >
+                                        <p
+                                            th:text="${attendance.justificationText}"
+                                            style="margin: 0"
+                                        >
+                                            Justification text
+                                        </p>
+                                    </div>
+                                    <div
+                                        th:if="${attendance.comment != null && attendance.comment.contains('Rejection reason:')}"
+                                        style="
+                                            background: #fef2f2;
+                                            padding: 0.75rem;
+                                            border-radius: var(--radius);
+                                            font-size: 0.875rem;
+                                            border-left: 3px solid var(--danger);
+                                        "
+                                    >
+                                        <strong
+                                            style="
+                                                display: block;
+                                                margin-bottom: 0.25rem;
+                                                color: var(--danger);
+                                            "
+                                            >Rejection Reason:</strong
+                                        >
+                                        <p
+                                            th:text="${attendance.comment.replace('Rejection reason:', '').trim()}"
+                                            style="margin: 0"
+                                        >
+                                            Reason
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Comments Card (if any) -->
+                        <div
+                            class="card"
+                            style="margin-top: 1rem"
+                            th:if="${attendance.comment != null && !attendance.comment.isBlank() && !attendance.comment.contains('Rejection reason:')}"
+                        >
+                            <div class="card-header">
+                                <h3 class="card-title">Comments</h3>
+                            </div>
+                            <div class="card-body">
+                                <p
+                                    th:text="${attendance.comment}"
+                                    style="margin: 0; font-size: 0.875rem"
+                                >
+                                    Comment text
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <div class="container">
+                <p>&copy; 2025 Marked. All rights reserved.</p>
+            </div>
+        </footer>
+
+        <script>
+            function toggleMenu() {
+                const navbar = document.getElementById("navbarCollapse");
+                navbar.classList.toggle("show");
+            }
+
+            // Auto-dismiss alerts after 5 seconds
+            document.addEventListener("DOMContentLoaded", function () {
+                const alerts = document.querySelectorAll(".alert");
+                alerts.forEach(function (alert) {
+                    setTimeout(function () {
+                        alert.style.transition = "opacity 0.5s";
+                        alert.style.opacity = "0";
+                        setTimeout(function () {
+                            alert.remove();
+                        }, 500);
+                    }, 5000);
+                });
+            });
+        </script>
+    </body>
+</html>

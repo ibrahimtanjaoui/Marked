@@ -1,0 +1,243 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <!-- Head Fragment -->
+    <head th:fragment="head(title)">
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title th:text="${title} + ' | Marked'">
+            Marked - Attendance System
+        </title>
+        <link rel="icon" type="image/svg+xml" th:href="@{/img/favicon.svg}" />
+        <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}" />
+        <link rel="stylesheet" th:href="@{/css/style.css}" />
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"
+        />
+    </head>
+
+    <!-- Student Navbar Fragment -->
+    <nav th:fragment="navbar-student(student)" class="navbar-area sticky">
+        <div class="container">
+            <div class="navbar">
+                <a th:href="@{/}" class="navbar-brand">
+                    <span class="brand-icon">M</span>
+                    Marked
+                </a>
+
+                <button
+                    class="navbar-toggler"
+                    type="button"
+                    onclick="toggleMenu()"
+                >
+                    <span class="toggler-icon"></span>
+                    <span class="toggler-icon"></span>
+                    <span class="toggler-icon"></span>
+                </button>
+
+                <div class="navbar-collapse" id="navbarCollapse">
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a th:href="@{/}">Home</a>
+                        </li>
+                        <li class="nav-item" th:if="${student != null}">
+                            <a
+                                th:href="@{/students/{id}(id=${student.id})}"
+                                th:classappend="${#strings.endsWith(#httpServletRequest.requestURI, '/students/' + student.id)} ? 'active' : ''"
+                            >
+                                Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item" th:if="${student != null}">
+                            <a
+                                th:href="@{/students/{id}/attendance(id=${student.id})}"
+                                th:classappend="${#strings.contains(#httpServletRequest.requestURI, '/attendance')} ? 'active' : ''"
+                            >
+                                My Attendance
+                            </a>
+                        </li>
+                        <li class="nav-item" th:if="${student != null}">
+                            <a
+                                th:href="@{/students/{id}/attendance/mark(id=${student.id})}"
+                                th:classappend="${#strings.contains(#httpServletRequest.requestURI, '/mark')} ? 'active' : ''"
+                            >
+                                Mark Attendance
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Professor Navbar Fragment -->
+    <nav th:fragment="navbar-professor(professor)" class="navbar-area sticky">
+        <div class="container">
+            <div class="navbar">
+                <a th:href="@{/}" class="navbar-brand">
+                    <span class="brand-icon">M</span>
+                    Marked
+                </a>
+
+                <button
+                    class="navbar-toggler"
+                    type="button"
+                    onclick="toggleMenu()"
+                >
+                    <span class="toggler-icon"></span>
+                    <span class="toggler-icon"></span>
+                    <span class="toggler-icon"></span>
+                </button>
+
+                <div class="navbar-collapse" id="navbarCollapse">
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a th:href="@{/}">Home</a>
+                        </li>
+                        <li class="nav-item" th:if="${professor != null}">
+                            <a
+                                th:href="@{/professors/{id}(id=${professor.id})}"
+                                th:classappend="${#strings.endsWith(#httpServletRequest.requestURI, '/professors/' + professor.id)} ? 'active' : ''"
+                            >
+                                Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item" th:if="${professor != null}">
+                            <a
+                                th:href="@{/professors/{id}/sessions(id=${professor.id})}"
+                                th:classappend="${#strings.contains(#httpServletRequest.requestURI, '/sessions')} ? 'active' : ''"
+                            >
+                                My Sessions
+                            </a>
+                        </li>
+                        <li class="nav-item" th:if="${professor != null}">
+                            <a
+                                th:href="@{/professors/{id}/justifications(id=${professor.id})}"
+                                th:classappend="${#strings.contains(#httpServletRequest.requestURI, '/justifications')} ? 'active' : ''"
+                            >
+                                Justifications
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Dashboard Header Fragment (for use inside pages) -->
+    <header
+        th:fragment="dashboard-header(title, subtitle)"
+        class="dashboard-header"
+    >
+        <div class="container">
+            <h1 th:text="${title}">Dashboard</h1>
+            <p th:if="${subtitle}" th:text="${subtitle}">Welcome back</p>
+        </div>
+    </header>
+
+    <!-- Footer Fragment -->
+    <footer th:fragment="footer" class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 col-md-6 mb-4 mb-lg-0">
+                    <div class="footer-brand">
+                        <span class="brand-icon">M</span>
+                        Marked
+                    </div>
+                    <p class="footer-description">
+                        A modern attendance tracking system designed for
+                        universities.
+                    </p>
+                </div>
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h5>Quick Links</h5>
+                    <ul class="footer-links">
+                        <li><a th:href="@{/}">Home</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
+                    <h5>Support</h5>
+                    <ul class="footer-links">
+                        <li>IT Support Department</li>
+                        <li>University Administration</li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <h5>System</h5>
+                    <ul class="footer-links">
+                        <li>Marked Attendance System</li>
+                        <li>Version 1.0</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p class="mb-0">
+                    &copy; 2025 Marked. University Attendance System. All rights
+                    reserved.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Alert Messages Fragment -->
+    <div th:fragment="alerts" class="container mt-4">
+        <div th:if="${success}" class="alert alert-success">
+            <i class="bi bi-check-circle me-2"></i>
+            <span th:text="${success}"></span>
+        </div>
+        <div th:if="${error}" class="alert alert-danger">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            <span th:text="${error}"></span>
+        </div>
+        <div th:if="${warning}" class="alert alert-warning">
+            <i class="bi bi-exclamation-circle me-2"></i>
+            <span th:text="${warning}"></span>
+        </div>
+        <div th:if="${info}" class="alert alert-info">
+            <i class="bi bi-info-circle me-2"></i>
+            <span th:text="${info}"></span>
+        </div>
+    </div>
+
+    <!-- Pagination Fragment -->
+    <nav
+        th:fragment="pagination(currentPage, totalPages, baseUrl)"
+        aria-label="Page navigation"
+    >
+        <div
+            class="d-flex justify-content-between align-items-center mt-4 py-3"
+            th:if="${totalPages > 1}"
+        >
+            <a
+                th:href="@{${baseUrl}(page=${currentPage - 1})}"
+                th:classappend="${currentPage == 0} ? 'btn btn-outline disabled' : 'btn btn-outline'"
+                th:attr="aria-disabled=${currentPage == 0}"
+            >
+                <i class="bi bi-chevron-left me-1"></i> Previous
+            </a>
+            <span class="text-muted">
+                Page <strong th:text="${currentPage + 1}">1</strong> of
+                <strong th:text="${totalPages}">10</strong>
+            </span>
+            <a
+                th:href="@{${baseUrl}(page=${currentPage + 1})}"
+                th:classappend="${currentPage + 1 >= totalPages} ? 'btn btn-outline disabled' : 'btn btn-outline'"
+                th:attr="aria-disabled=${currentPage + 1 >= totalPages}"
+            >
+                Next <i class="bi bi-chevron-right ms-1"></i>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Scripts Fragment -->
+    <div th:fragment="scripts">
+        <script th:src="@{/js/bootstrap.bundle.min.js}"></script>
+        <script>
+            // Mobile menu toggle
+            function toggleMenu() {
+                const navbar = document.getElementById("navbarCollapse");
+                navbar.classList.toggle("show");
+            }
+        </script>
+    </div>
+</html>

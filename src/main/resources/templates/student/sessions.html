@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>My Sessions | Marked</title>
+        <link rel="icon" type="image/svg+xml" th:href="@{/img/favicon.svg}" />
+        <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}" />
+        <link rel="stylesheet" th:href="@{/css/style.css}" />
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"
+        />
+    </head>
+    <body class="page-wrapper">
+        <!-- Navbar -->
+        <nav class="navbar-area sticky">
+            <div class="container">
+                <div class="navbar">
+                    <a th:href="@{/}" class="navbar-brand">
+                        <span class="brand-icon">M</span>
+                        Marked
+                    </a>
+
+                    <button
+                        class="navbar-toggler"
+                        type="button"
+                        onclick="toggleMenu()"
+                    >
+                        <span class="toggler-icon"></span>
+                        <span class="toggler-icon"></span>
+                        <span class="toggler-icon"></span>
+                    </button>
+
+                    <div class="navbar-collapse" id="navbarCollapse">
+                        <ul class="navbar-nav">
+                            <li class="nav-item">
+                                <a th:href="@{/students/{id}(id=${student.id})}"
+                                    >Dashboard</a
+                                >
+                            </li>
+                            <li class="nav-item">
+                                <a
+                                    th:href="@{/students/{id}/attendance(id=${student.id})}"
+                                    >Attendance</a
+                                >
+                            </li>
+                            <li class="nav-item">
+                                <a
+                                    th:href="@{/students/{id}/attendance/mark(id=${student.id})}"
+                                    >Mark Attendance</a
+                                >
+                            </li>
+                            <li class="nav-item">
+                                <form
+                                    th:action="@{/auth/logout}"
+                                    method="post"
+                                    style="display: inline"
+                                >
+                                    <button type="submit" class="btn-logout">
+                                        <i class="bi bi-box-arrow-right"></i>
+                                        Logout
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Dashboard Header -->
+        <header class="dashboard-header">
+            <div class="container">
+                <h1>My Sessions</h1>
+                <p>
+                    <span
+                        th:if="${student.section != null}"
+                        th:text="${student.section.name}"
+                        >Section A</span
+                    >
+                    <span th:if="${student.section == null}"
+                        >No section assigned</span
+                    >
+                </p>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="dashboard-content">
+            <div class="container">
+                <!-- Alerts -->
+                <div
+                    th:if="${success}"
+                    class="alert alert-success"
+                    style="margin-bottom: 1.5rem"
+                >
+                    <span th:text="${success}"></span>
+                </div>
+                <div
+                    th:if="${error}"
+                    class="alert alert-danger"
+                    style="margin-bottom: 1.5rem"
+                >
+                    <span th:text="${error}"></span>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="row g-3" style="margin-top: -20px">
+                    <div class="col-6 col-md-4">
+                        <div class="card text-center" style="padding: 1.25rem">
+                            <div
+                                style="
+                                    font-size: 2rem;
+                                    font-weight: 700;
+                                    color: var(--primary);
+                                "
+                                th:text="${#lists.size(sessions)}"
+                            >
+                                0
+                            </div>
+                            <div
+                                style="
+                                    font-size: 0.875rem;
+                                    color: var(--gray-500);
+                                    text-transform: uppercase;
+                                    letter-spacing: 0.05em;
+                                "
+                            >
+                                Total
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-4">
+                        <div class="card text-center" style="padding: 1.25rem">
+                            <div
+                                style="
+                                    font-size: 2rem;
+                                    font-weight: 700;
+                                    color: var(--success);
+                                "
+                                th:text="${#lists.size(sessions.?[sessionCode != null])}"
+                            >
+                                0
+                            </div>
+                            <div
+                                style="
+                                    font-size: 0.875rem;
+                                    color: var(--gray-500);
+                                    text-transform: uppercase;
+                                    letter-spacing: 0.05em;
+                                "
+                            >
+                                Active
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="card text-center" style="padding: 1.25rem">
+                            <div
+                                style="
+                                    font-size: 2rem;
+                                    font-weight: 700;
+                                    color: var(--danger);
+                                "
+                                th:text="${#lists.size(sessions.?[type != null && type.name() == 'CANCELLED'])}"
+                            >
+                                0
+                            </div>
+                            <div
+                                style="
+                                    font-size: 0.875rem;
+                                    color: var(--gray-500);
+                                    text-transform: uppercase;
+                                    letter-spacing: 0.05em;
+                                "
+                            >
+                                Cancelled
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sessions Table -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h3 class="card-title">All Sessions</h3>
+                        <a
+                            th:href="@{/students/{id}/attendance/mark(id=${student.id})}"
+                            class="btn btn-accent"
+                        >
+                            Mark Attendance
+                        </a>
+                    </div>
+                    <div class="card-body p-0">
+                        <div
+                            th:if="${#lists.isEmpty(sessions)}"
+                            class="empty-state"
+                        >
+                            <div class="empty-state-title">
+                                No sessions found
+                            </div>
+                            <p class="empty-state-description">
+                                There are no sessions scheduled for your section
+                                yet.
+                            </p>
+                        </div>
+
+                        <div
+                            th:unless="${#lists.isEmpty(sessions)}"
+                            class="table-responsive"
+                        >
+                            <table class="table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Course</th>
+                                        <th>Professor</th>
+                                        <th>Time</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr
+                                        th:each="sess : ${sessions}"
+                                        th:classappend="${sess.type != null && sess.type.name() == 'CANCELLED'} ? 'text-muted' : ''"
+                                    >
+                                        <td>
+                                            <span
+                                                th:if="${sess.calendar != null}"
+                                                th:text="${#temporals.format(sess.calendar.date, 'EEE, MMM d, yyyy')}"
+                                                >Mon, Jan 1, 2025</span
+                                            >
+                                            <span
+                                                th:unless="${sess.calendar != null}"
+                                                class="text-muted"
+                                                >-</span
+                                            >
+                                        </td>
+                                        <td>
+                                            <strong
+                                                th:if="${sess.timeTable != null && sess.timeTable.courseAssignment != null && sess.timeTable.courseAssignment.course != null}"
+                                                th:text="${sess.timeTable.courseAssignment.course.name}"
+                                                >Course Name</strong
+                                            >
+                                            <strong
+                                                th:unless="${sess.timeTable != null && sess.timeTable.courseAssignment != null && sess.timeTable.courseAssignment.course != null}"
+                                                >Unknown Course</strong
+                                            >
+                                        </td>
+                                        <td>
+                                            <span
+                                                th:if="${sess.timeTable != null && sess.timeTable.courseAssignment != null && sess.timeTable.courseAssignment.professor != null}"
+                                                th:text="'Prof. ' + ${sess.timeTable.courseAssignment.professor.familyName}"
+                                                >Prof. Name</span
+                                            >
+                                            <span
+                                                th:unless="${sess.timeTable != null && sess.timeTable.courseAssignment != null && sess.timeTable.courseAssignment.professor != null}"
+                                                class="text-muted"
+                                                >-</span
+                                            >
+                                        </td>
+                                        <td>
+                                            <span
+                                                th:if="${sess.startTime != null}"
+                                                th:text="${#temporals.format(sess.startTime, 'HH:mm')}"
+                                                >10:00</span
+                                            >
+                                            <span
+                                                th:if="${sess.endTime != null}"
+                                                >-
+                                                <span
+                                                    th:text="${#temporals.format(sess.endTime, 'HH:mm')}"
+                                                    >12:00</span
+                                                ></span
+                                            >
+                                        </td>
+                                        <td>
+                                            <span
+                                                th:if="${sess.type != null && sess.type.name() == 'CANCELLED'}"
+                                                class="badge badge-danger"
+                                                >Cancelled</span
+                                            >
+                                            <span
+                                                th:if="${sess.sessionCode != null && (sess.type == null || sess.type.name() != 'CANCELLED')}"
+                                                class="badge badge-success"
+                                                >Active</span
+                                            >
+                                            <span
+                                                th:if="${sess.sessionCode == null && (sess.type == null || sess.type.name() != 'CANCELLED')}"
+                                                class="badge badge-secondary"
+                                                >Scheduled</span
+                                            >
+                                        </td>
+                                        <td>
+                                            <a
+                                                th:if="${sess.sessionCode != null && (sess.type == null || sess.type.name() != 'CANCELLED')}"
+                                                th:href="@{/students/{studentId}/attendance/mark(studentId=${student.id}, sessionId=${sess.id})}"
+                                                class="btn btn-accent btn-sm"
+                                            >
+                                                Mark
+                                            </a>
+                                            <span
+                                                th:if="${sess.sessionCode == null || (sess.type != null && sess.type.name() == 'CANCELLED')}"
+                                                class="text-muted"
+                                            >
+                                                -
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="container">
+                <div class="footer-bottom">
+                    <p class="mb-0">
+                        &copy; 2025 Marked. University Attendance System.
+                    </p>
+                </div>
+            </div>
+        </footer>
+
+        <script>
+            function toggleMenu() {
+                const navbar = document.getElementById("navbarCollapse");
+                navbar.classList.toggle("show");
+            }
+
+            // Auto-dismiss alerts after 5 seconds
+            document.addEventListener("DOMContentLoaded", function () {
+                const alerts = document.querySelectorAll(".alert");
+                alerts.forEach(function (alert) {
+                    setTimeout(function () {
+                        alert.style.transition = "opacity 0.5s";
+                        alert.style.opacity = "0";
+                        setTimeout(function () {
+                            alert.remove();
+                        }, 500);
+                    }, 5000);
+                });
+            });
+        </script>
+    </body>
+</html>

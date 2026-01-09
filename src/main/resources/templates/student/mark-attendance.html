@@ -1,0 +1,608 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Mark Attendance | Marked</title>
+        <link rel="icon" type="image/svg+xml" th:href="@{/img/favicon.svg}" />
+        <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}" />
+        <link rel="stylesheet" th:href="@{/css/style.css}" />
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"
+        />
+        <style>
+            .step-indicator {
+                display: flex;
+                justify-content: center;
+                gap: 1rem;
+                margin-bottom: 1.5rem;
+            }
+            .step {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                padding: 0.5rem 1rem;
+                border-radius: 2rem;
+                background: var(--gray-100);
+                color: var(--gray-500);
+                font-size: 0.875rem;
+                transition: all 0.3s ease;
+            }
+            .step.active {
+                background: var(--accent);
+                color: white;
+            }
+            .step.completed {
+                background: var(--success);
+                color: white;
+            }
+            .step-number {
+                width: 24px;
+                height: 24px;
+                border-radius: 50%;
+                background: currentColor;
+                color: white;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: 600;
+            }
+            .step.active .step-number,
+            .step.completed .step-number {
+                background: rgba(255, 255, 255, 0.3);
+            }
+            .location-status {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                padding: 0.75rem 1rem;
+                border-radius: 0.5rem;
+                margin-bottom: 1rem;
+            }
+            .location-status.pending {
+                background: var(--gray-100);
+                color: var(--gray-600);
+            }
+            .location-status.success {
+                background: rgba(34, 197, 94, 0.1);
+                color: var(--success);
+            }
+            .location-status.error {
+                background: rgba(239, 68, 68, 0.1);
+                color: var(--danger);
+            }
+            .location-status i {
+                font-size: 1.25rem;
+            }
+            .spinner {
+                width: 20px;
+                height: 20px;
+                border: 2px solid currentColor;
+                border-top-color: transparent;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+            }
+            @keyframes spin {
+                to {
+                    transform: rotate(360deg);
+                }
+            }
+            .hidden {
+                display: none !important;
+            }
+            .token-input {
+                font-family: monospace;
+                font-size: 1.5rem;
+                letter-spacing: 0.25em;
+                text-align: center;
+                text-transform: uppercase;
+            }
+            .email-hint {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                padding: 1rem;
+                background: rgba(59, 130, 246, 0.1);
+                border-radius: 0.5rem;
+                color: var(--primary);
+                margin-bottom: 1rem;
+            }
+            .email-hint i {
+                font-size: 1.5rem;
+            }
+        </style>
+    </head>
+    <body class="page-wrapper">
+        <!-- Navbar -->
+        <nav class="navbar-area sticky">
+            <div class="container">
+                <div class="navbar">
+                    <a th:href="@{/}" class="navbar-brand">
+                        <span class="brand-icon">M</span>
+                        Marked
+                    </a>
+
+                    <button
+                        class="navbar-toggler"
+                        type="button"
+                        onclick="toggleMenu()"
+                    >
+                        <span class="toggler-icon"></span>
+                        <span class="toggler-icon"></span>
+                        <span class="toggler-icon"></span>
+                    </button>
+
+                    <div class="navbar-collapse" id="navbarCollapse">
+                        <ul class="navbar-nav">
+                            <li class="nav-item">
+                                <a th:href="@{/students/{id}(id=${student.id})}"
+                                    >Dashboard</a
+                                >
+                            </li>
+                            <li class="nav-item">
+                                <a
+                                    th:href="@{/students/{id}/attendance(id=${student.id})}"
+                                    >Attendance</a
+                                >
+                            </li>
+                            <li class="nav-item">
+                                <a
+                                    th:href="@{/students/{id}/attendance/mark(id=${student.id})}"
+                                    class="active"
+                                    >Mark Attendance</a
+                                >
+                            </li>
+                            <li class="nav-item">
+                                <form
+                                    th:action="@{/auth/logout}"
+                                    method="post"
+                                    style="display: inline"
+                                >
+                                    <button type="submit" class="btn-logout">
+                                        <i class="bi bi-box-arrow-right"></i>
+                                        Logout
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Dashboard Header -->
+        <header class="dashboard-header">
+            <div class="container">
+                <h1>Mark Attendance</h1>
+                <p>Secure two-step verification process</p>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="dashboard-content">
+            <div class="container">
+                <!-- Alerts -->
+                <div
+                    th:if="${success}"
+                    class="alert alert-success"
+                    style="margin-bottom: 1.5rem"
+                >
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    <span th:text="${success}"></span>
+                </div>
+                <div
+                    th:if="${info}"
+                    class="alert alert-info"
+                    style="margin-bottom: 1.5rem"
+                >
+                    <i class="bi bi-info-circle-fill me-2"></i>
+                    <span th:text="${info}"></span>
+                </div>
+                <div
+                    th:if="${error}"
+                    class="alert alert-danger"
+                    style="margin-bottom: 1.5rem"
+                >
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <span th:text="${error}"></span>
+                </div>
+
+                <div
+                    class="row justify-content-center"
+                    style="margin-top: -20px"
+                >
+                    <div class="col-lg-6 col-md-8">
+                        <!-- Step Indicator -->
+                        <div class="step-indicator">
+                            <div
+                                class="step"
+                                th:classappend="${tokenSent} ? 'completed' : 'active'"
+                                id="step1Indicator"
+                            >
+                                <span class="step-number">
+                                    <i
+                                        th:if="${tokenSent}"
+                                        class="bi bi-check"
+                                    ></i>
+                                    <span th:unless="${tokenSent}">1</span>
+                                </span>
+                                <span>Verify Location & Code</span>
+                            </div>
+                            <div
+                                class="step"
+                                th:classappend="${tokenSent} ? 'active' : ''"
+                                id="step2Indicator"
+                            >
+                                <span class="step-number">2</span>
+                                <span>Enter Email Token</span>
+                            </div>
+                        </div>
+
+                        <!-- STEP 1: Session Code + Location -->
+                        <div
+                            class="card"
+                            id="step1Card"
+                            th:classappend="${tokenSent} ? 'hidden' : ''"
+                        >
+                            <div class="card-header">
+                                <h3 class="card-title">
+                                    <i class="bi bi-1-circle me-2"></i>
+                                    Enter Session Code
+                                </h3>
+                            </div>
+                            <div class="card-body">
+                                <!-- Location Status -->
+                                <div
+                                    class="location-status pending"
+                                    id="locationStatus"
+                                >
+                                    <div
+                                        class="spinner"
+                                        id="locationSpinner"
+                                    ></div>
+                                    <span id="locationText"
+                                        >Detecting your location...</span
+                                    >
+                                </div>
+
+                                <form
+                                    th:action="@{/students/{id}/attendance/request-token(id=${student.id})}"
+                                    method="post"
+                                    id="tokenRequestForm"
+                                >
+                                    <!-- Hidden location fields -->
+                                    <input
+                                        type="hidden"
+                                        name="latitude"
+                                        id="latitude"
+                                    />
+                                    <input
+                                        type="hidden"
+                                        name="longitude"
+                                        id="longitude"
+                                    />
+
+                                    <!-- Session Selection -->
+                                    <div class="form-group">
+                                        <label
+                                            class="form-label"
+                                            for="sessionId"
+                                            >Select Session</label
+                                        >
+                                        <select
+                                            id="sessionId"
+                                            name="sessionId"
+                                            class="form-control"
+                                            required
+                                        >
+                                            <option value="">
+                                                -- Choose a session --
+                                            </option>
+                                            <option
+                                                th:each="sess : ${availableSessions}"
+                                                th:value="${sess.id}"
+                                                th:selected="${selectedSessionId != null && selectedSessionId == sess.id}"
+                                                th:text="${(sess.timeTable != null && sess.timeTable.courseAssignment != null && sess.timeTable.courseAssignment.course != null ? sess.timeTable.courseAssignment.course.name : 'Unknown Course') + ' - ' + (sess.calendar != null ? #temporals.format(sess.calendar.date, 'EEE, MMM d') : 'Unknown Date') + ' ' + (sess.startTime != null ? #temporals.format(sess.startTime, 'HH:mm') : '') + '-' + (sess.endTime != null ? #temporals.format(sess.endTime, 'HH:mm') : '')}"
+                                            >
+                                                Course - Date Time
+                                            </option>
+                                        </select>
+                                        <p class="form-text">
+                                            Select the session you want to mark
+                                            attendance for
+                                        </p>
+                                    </div>
+
+                                    <!-- Session Code Input -->
+                                    <div class="form-group">
+                                        <label
+                                            class="form-label"
+                                            for="sessionCode"
+                                            >Session Code</label
+                                        >
+                                        <input
+                                            type="text"
+                                            id="sessionCode"
+                                            name="sessionCode"
+                                            class="form-control session-code-input"
+                                            placeholder="000000"
+                                            maxlength="6"
+                                            pattern="[0-9A-Za-z]{6}"
+                                            required
+                                            autocomplete="off"
+                                            style="
+                                                text-transform: uppercase;
+                                                letter-spacing: 0.2em;
+                                                font-size: 1.25rem;
+                                                text-align: center;
+                                            "
+                                        />
+                                        <p class="form-text">
+                                            Enter the 6-character code displayed
+                                            by your professor
+                                        </p>
+                                    </div>
+
+                                    <!-- Submit Button -->
+                                    <div class="form-group mt-4 mb-0">
+                                        <button
+                                            type="submit"
+                                            class="btn btn-accent btn-lg w-100"
+                                            id="requestTokenBtn"
+                                            disabled
+                                        >
+                                            <i class="bi bi-geo-alt me-2"></i>
+                                            Verify & Send Code to Email
+                                        </button>
+                                    </div>
+                                </form>
+
+                                <!-- Empty State if no sessions -->
+                                <div
+                                    th:if="${#lists.isEmpty(availableSessions)}"
+                                    class="empty-state mt-4"
+                                >
+                                    <div class="empty-state-icon">
+                                        <i class="bi bi-calendar-x"></i>
+                                    </div>
+                                    <div class="empty-state-title">
+                                        No sessions available
+                                    </div>
+                                    <p class="empty-state-description">
+                                        There are no active sessions right now.
+                                        Sessions become available when your
+                                        professor generates a code.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- STEP 2: Enter Email Token -->
+                        <div
+                            class="card"
+                            id="step2Card"
+                            th:classappend="${tokenSent == null or !tokenSent} ? 'hidden' : ''"
+                        >
+                            <div class="card-header">
+                                <h3 class="card-title">
+                                    <i class="bi bi-2-circle me-2"></i>
+                                    Enter Verification Code
+                                </h3>
+                            </div>
+                            <div class="card-body">
+                                <!-- Email Hint -->
+                                <div class="email-hint">
+                                    <i class="bi bi-envelope-check"></i>
+                                    <div>
+                                        <strong>Check your email!</strong>
+                                        <br />
+                                        <span
+                                            >We've sent a verification code to
+                                            <strong
+                                                th:text="${student?.email}"
+                                            ></strong
+                                        ></span>
+                                    </div>
+                                </div>
+
+                                <form
+                                    th:action="@{/students/{id}/attendance/confirm-token(id=${student.id})}"
+                                    method="post"
+                                    id="confirmTokenForm"
+                                >
+                                    <!-- Token Input -->
+                                    <div class="form-group">
+                                        <label class="form-label" for="token"
+                                            >Verification Code</label
+                                        >
+                                        <input
+                                            type="text"
+                                            id="token"
+                                            name="token"
+                                            class="form-control token-input"
+                                            placeholder="XXXXXXXX"
+                                            maxlength="8"
+                                            required
+                                            autocomplete="off"
+                                            th:value="${confirmTokenRequest?.token()}"
+                                        />
+                                        <p class="form-text">
+                                            Enter the 8-character code from your
+                                            email
+                                        </p>
+                                    </div>
+
+                                    <!-- Submit Button -->
+                                    <div class="form-group mt-4 mb-0">
+                                        <button
+                                            type="submit"
+                                            class="btn btn-accent btn-lg w-100"
+                                        >
+                                            <i
+                                                class="bi bi-check-circle me-2"
+                                            ></i>
+                                            Confirm Attendance
+                                        </button>
+                                    </div>
+                                </form>
+
+                                <!-- Back to Step 1 -->
+                                <div class="text-center mt-3">
+                                    <a
+                                        th:href="@{/students/{id}/attendance/mark(id=${student.id})}"
+                                        class="text-muted"
+                                    >
+                                        <i class="bi bi-arrow-left me-1"></i>
+                                        Start over with a different session
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="container">
+                <div class="footer-bottom">
+                    <p class="mb-0">
+                        &copy; 2025 Marked. University Attendance System.
+                    </p>
+                </div>
+            </div>
+        </footer>
+
+        <script>
+            function toggleMenu() {
+                const navbar = document.getElementById("navbarCollapse");
+                navbar.classList.toggle("show");
+            }
+
+            // Geolocation handling
+            const locationStatus = document.getElementById("locationStatus");
+            const locationSpinner = document.getElementById("locationSpinner");
+            const locationText = document.getElementById("locationText");
+            const latitudeInput = document.getElementById("latitude");
+            const longitudeInput = document.getElementById("longitude");
+            const requestTokenBtn = document.getElementById("requestTokenBtn");
+
+            function setLocationSuccess(lat, lon) {
+                locationStatus.classList.remove("pending", "error");
+                locationStatus.classList.add("success");
+                locationSpinner.style.display = "none";
+                locationText.innerHTML =
+                    '<i class="bi bi-check-circle-fill me-1"></i> Location detected successfully';
+                latitudeInput.value = lat;
+                longitudeInput.value = lon;
+                requestTokenBtn.disabled = false;
+            }
+
+            function setLocationError(message) {
+                locationStatus.classList.remove("pending", "success");
+                locationStatus.classList.add("error");
+                locationSpinner.style.display = "none";
+                locationText.innerHTML =
+                    '<i class="bi bi-exclamation-triangle-fill me-1"></i> ' +
+                    message;
+                requestTokenBtn.disabled = true;
+            }
+
+            function requestLocation() {
+                if (!navigator.geolocation) {
+                    setLocationError(
+                        "Geolocation is not supported by your browser",
+                    );
+                    return;
+                }
+
+                navigator.geolocation.getCurrentPosition(
+                    function (position) {
+                        setLocationSuccess(
+                            position.coords.latitude,
+                            position.coords.longitude,
+                        );
+                    },
+                    function (error) {
+                        let message = "Unable to get your location. ";
+                        switch (error.code) {
+                            case error.PERMISSION_DENIED:
+                                message +=
+                                    "Please enable location permissions in your browser settings.";
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                message +=
+                                    "Location information is unavailable.";
+                                break;
+                            case error.TIMEOUT:
+                                message +=
+                                    "Location request timed out. Please try again.";
+                                break;
+                            default:
+                                message += "An unknown error occurred.";
+                        }
+                        setLocationError(message);
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 60000,
+                    },
+                );
+            }
+
+            // Request location on page load (only for step 1)
+            const step1Card = document.getElementById("step1Card");
+            if (step1Card && !step1Card.classList.contains("hidden")) {
+                requestLocation();
+            }
+
+            // Auto-uppercase session code input
+            const sessionCodeInput = document.getElementById("sessionCode");
+            if (sessionCodeInput) {
+                sessionCodeInput.addEventListener("input", function () {
+                    this.value = this.value.toUpperCase();
+                });
+            }
+
+            // Auto-uppercase token input
+            const tokenInput = document.getElementById("token");
+            if (tokenInput) {
+                tokenInput.addEventListener("input", function () {
+                    this.value = this.value.toUpperCase();
+                });
+            }
+
+            // Form validation before submit
+            const tokenRequestForm =
+                document.getElementById("tokenRequestForm");
+            if (tokenRequestForm) {
+                tokenRequestForm.addEventListener("submit", function (e) {
+                    if (!latitudeInput.value || !longitudeInput.value) {
+                        e.preventDefault();
+                        alert(
+                            "Location is required. Please enable location services and try again.",
+                        );
+                        requestLocation();
+                    }
+                });
+            }
+
+            // Auto-dismiss alerts after 5 seconds
+            document.addEventListener("DOMContentLoaded", function () {
+                const alerts = document.querySelectorAll(".alert");
+                alerts.forEach(function (alert) {
+                    setTimeout(function () {
+                        alert.style.transition = "opacity 0.5s";
+                        alert.style.opacity = "0";
+                        setTimeout(function () {
+                            alert.remove();
+                        }, 500);
+                    }, 5000);
+                });
+            });
+        </script>
+    </body>
+</html>
